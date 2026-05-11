@@ -42,7 +42,7 @@ export default function DetailsPanel({ selectedEvent, currentYear }) {
 
   if (!selectedEvent) return (
     <div style={{
-      position: 'fixed', right: 0, top: 0, bottom: 60,
+      position: 'fixed', right: 0, top: 0, bottom: 260,
       width: 280, background: '#fdf6e3',
       borderLeft: '2px solid #c8a96e',
       fontFamily: 'Georgia, serif',
@@ -60,7 +60,7 @@ export default function DetailsPanel({ selectedEvent, currentYear }) {
 
   return (
     <div style={{
-      position: 'fixed', right: 0, top: 0, bottom: 60,
+      position: 'fixed', right: 0, top: 0, bottom: 260,
       width: 280, background: '#fdf6e3',
       borderLeft: '2px solid #c8a96e',
       fontFamily: 'Georgia, serif',
