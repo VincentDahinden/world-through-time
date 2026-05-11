@@ -51,7 +51,7 @@ export default function WorldMap({ currentYear, selectedCategories, onEventSelec
         {...viewState}
         onMove={e => setViewState(e.viewState)}
         style={{ width: '100%', height: '100vh' }}
-        mapStyle="https://tiles.stadiamaps.com/styles/alidade_smooth.json"
+        mapStyle="https://demotiles.maplibre.org/style.json"
       >
         {cities.map(city => (
           <Marker key={city.id} longitude={city.longitude} latitude={city.latitude}>
