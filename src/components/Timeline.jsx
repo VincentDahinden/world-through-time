@@ -3,12 +3,10 @@ export default function Timeline({ currentYear, onYearChange }) {
     const increase = () => onYearChange(Math.min(1600, currentYear + 1))
   
     const btnStyle = {
-      background: 'red', color: 'white',
+      background: '#3a2a0a', color: '#f5e6c8',
       border: 'none', borderRadius: 6,
       width: 32, height: 32, fontSize: 18,
-      cursor: 'pointer', fontFamily: 'Georgia, serif',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      flexShrink: 0
+      cursor: 'pointer', flexShrink: 0
     }
   
     return (
@@ -17,11 +15,7 @@ export default function Timeline({ currentYear, onYearChange }) {
         background: '#f5e6c8', borderTop: '2px solid #8b6914',
         padding: '10px 24px', fontFamily: 'Georgia, serif', zIndex: 10
       }}>
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 12
-        }}>
-          {/* Year back */}
-          <button style={btnStyle} onClick={decrease}>‹</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
   
           {/* Slider + labels */}
           <div style={{ flex: 1 }}>
@@ -46,9 +40,14 @@ export default function Timeline({ currentYear, onYearChange }) {
             </div>
           </div>
   
-          {/* Year forward */}
-          <button style={btnStyle} onClick={increase}>›</button>
+          {/* Both buttons grouped on the right */}
+          <div style={{ display: 'flex', gap: 4 }}>
+            <button onClick={decrease} style={btnStyle}>‹</button>
+            <button onClick={increase} style={btnStyle}>›</button>
+          </div>
+  
         </div>
       </div>
     )
   }
+  
