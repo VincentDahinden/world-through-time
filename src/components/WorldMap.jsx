@@ -8,6 +8,20 @@ const statusColors = {
   debated: '#ffb300',
   contested: '#e53935'
 }
+const categoryIcons = {
+    'Governance & Law':          '⚖️',
+    'Military & Conflict':       '⚔️',
+    'Built Environment':         '🏛️',
+    'Religion & Belief':         '✝️',
+    'Economy & Trade':           '💰',
+    'Society & Demographics':    '👥',
+    'Science & Knowledge':       '🔭',
+    'Culture & Arts':            '🎨',
+    'Power & Succession':        '👑',
+    'Environment & Ecology':     '🌿',
+    'Collapse & Transformation': '💥',
+  }
+
 
 export default function WorldMap({ currentYear, selectedCategories, onEventSelect }) {
   const [cities, setCities] = useState([])
@@ -72,23 +86,24 @@ export default function WorldMap({ currentYear, selectedCategories, onEventSelec
           </Marker>
         ))}
 
-        {events.map(event => (
-          <Marker
-            key={event.id}
-            longitude={event.longitude}
-            latitude={event.latitude}
-            onClick={() => onEventSelect && onEventSelect(event)}
-          >
-            <div style={{
-              width: 10, height: 10,
-              borderRadius: '50%',
-              background: statusColors[event.status] || '#43a047',
-              border: '2px solid #fff',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.4)',
-              cursor: 'pointer'
-            }} />
-          </Marker>
-        ))}
+{events.map(event => (
+  <Marker
+    key={event.id}
+    longitude={event.longitude}
+    latitude={event.latitude}
+    onClick={() => onEventSelect && onEventSelect(event)}
+  >
+    <div style={{
+      fontSize: viewState.zoom < 3 ? 10 : Math.max(10, Math.min(20, viewState.zoom * 3)),
+      cursor: 'pointer',
+      filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))',
+      userSelect: 'none',
+      lineHeight: 1
+    }}>
+      {categoryIcons[event.category] || '📍'}
+    </div>
+  </Marker>
+))}
       </Map>
     </>
   )
