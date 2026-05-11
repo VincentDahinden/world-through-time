@@ -11,9 +11,10 @@ export default function Timeline({ currentYear, onYearChange }) {
   
     return (
       <div style={{
-        position: 'fixed', bottom: 0, left: 200, right: 280,
+        position: 'fixed', bottom: 0, left: 0, right: 0,
+        padding: '10px 300px 10px 215px',
         background: '#f5e6c8', borderTop: '2px solid #8b6914',
-        padding: '10px 24px', fontFamily: 'Georgia, serif', zIndex: 10
+        fontFamily: 'Georgia, serif', zIndex: 10
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
   
@@ -50,4 +51,3 @@ export default function Timeline({ currentYear, onYearChange }) {
       </div>
     )
   }
-  
