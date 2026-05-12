@@ -19,59 +19,54 @@ const entities = [
   
     return (
       <div style={{
-        position: 'fixed', right: 0, top: 0,
-        width: 305, background: '#f0e6cc',
-        borderLeft: '2px solid #c8a96e',
+        position: 'fixed', top: 0, left: 0, right: 0,
+        height: 40, background: '#3a2a0a',
         borderBottom: '2px solid #c8a96e',
         fontFamily: 'Georgia, serif',
-        padding: '10px 12px', zIndex: 11
+        display: 'flex', alignItems: 'center',
+        padding: '0 16px', gap: 8, zIndex: 20
       }}>
-        <div style={{
-          display: 'flex', justifyContent: 'space-between',
-          alignItems: 'center', marginBottom: 8
+        <span style={{
+          fontSize: 10, color: '#f5e6c8', letterSpacing: 1,
+          textTransform: 'uppercase', marginRight: 8, whiteSpace: 'nowrap'
         }}>
-          <div style={{
-            fontSize: 10, fontWeight: 'bold', color: '#3a2a0a',
-            letterSpacing: 1, textTransform: 'uppercase'
-          }}>
-            Civilisations
-          </div>
-          <button
-            onClick={() => onEntityChange(
-              allSelected ? [] : entities.map(e => e.id)
-            )}
-            style={{
-              padding: '2px 8px',
-              background: allSelected ? '#3a2a0a' : '#fff8ee',
-              color: allSelected ? '#fff' : '#5a3e1b',
-              border: '1px solid #c8a96e', borderRadius: 4,
-              fontFamily: 'Georgia, serif', fontSize: 10,
-              cursor: 'pointer'
-            }}>
-            {allSelected ? 'Deselect All' : 'Select All'}
-          </button>
-        </div>
+          Civilisations
+        </span>
   
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-          {entities.map(entity => {
-            const active = selectedEntities.includes(entity.id)
-            return (
-              <button key={entity.id} onClick={() => toggleEntity(entity.id)}
-                style={{
-                  padding: '3px 10px',
-                  background: active ? entity.colour : '#fff8ee',
-                  color: active ? '#fff' : entity.colour,
-                  border: `1px solid ${entity.colour}`,
-                  borderRadius: 4,
-                  fontFamily: 'Georgia, serif', fontSize: 10,
-                  cursor: 'pointer', whiteSpace: 'nowrap',
-                  fontWeight: 'bold'
-                }}>
-                {entity.short}
-              </button>
-            )
-          })}
-        </div>
+        {entities.map(entity => {
+          const active = selectedEntities.includes(entity.id)
+          return (
+            <button key={entity.id} onClick={() => toggleEntity(entity.id)}
+              style={{
+                padding: '3px 12px',
+                background: active ? entity.colour : 'transparent',
+                color: active ? '#fff' : entity.colour,
+                border: `1px solid ${entity.colour}`,
+                borderRadius: 4,
+                fontFamily: 'Georgia, serif', fontSize: 11,
+                cursor: 'pointer', whiteSpace: 'nowrap',
+                fontWeight: 'bold'
+              }}>
+              {entity.short}
+            </button>
+          )
+        })}
+  
+        <button
+          onClick={() => onEntityChange(
+            allSelected ? [] : entities.map(e => e.id)
+          )}
+          style={{
+            marginLeft: 'auto',
+            padding: '3px 10px',
+            background: 'transparent',
+            color: '#f5e6c8',
+            border: '1px solid #c8a96e', borderRadius: 4,
+            fontFamily: 'Georgia, serif', fontSize: 10,
+            cursor: 'pointer'
+          }}>
+          {allSelected ? 'Deselect All' : 'Select All'}
+        </button>
       </div>
     )
   }

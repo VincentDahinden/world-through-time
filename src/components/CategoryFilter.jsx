@@ -25,64 +25,47 @@ const categories = [
   
     return (
       <div style={{
-        position: 'fixed', right: 0, bottom: 50,
-        width: 305, height: 260,
-        boxsizing: 'border-box',
-        background: '#f0e6cc',
-        borderLeft: '2px solid #c8a96e',
-        borderTop: '2px solid #c8a96e',
+        position: 'fixed', top: 290, left: 0, right: 0,
+        height: 50, background: '#f5edd8',
+        borderBottom: '2px solid #c8a96e',
         fontFamily: 'Georgia, serif',
-        padding: '10px 12px',
-        overflowY: 'auto',
-        zIndex: 10
+        display: 'flex', alignItems: 'center',
+        padding: '0 16px', gap: 6, zIndex: 15,
+        overflowX: 'auto'
       }}>
-        <div style={{
-          display: 'flex', justifyContent: 'space-between',
-          alignItems: 'center', marginBottom: 8
-        }}>
-          <div style={{
-            fontSize: 10, fontWeight: 'bold', color: '#3a2a0a',
-            letterSpacing: 1, textTransform: 'uppercase'
+        <button
+          onClick={() => onCategoryChange(
+            allSelected ? [] : categories.map(c => c.name)
+          )}
+          style={{
+            padding: '3px 10px', flexShrink: 0,
+            background: allSelected ? '#3a2a0a' : '#fff8ee',
+            color: allSelected ? '#fff' : '#5a3e1b',
+            border: '1px solid #c8a96e', borderRadius: 4,
+            fontFamily: 'Georgia, serif', fontSize: 10,
+            cursor: 'pointer'
           }}>
-            Categories
-          </div>
-          <button
-            onClick={() => onCategoryChange(
-              allSelected ? [] : categories.map(c => c.name)
-            )}
-            style={{
-              padding: '2px 8px',
-              background: allSelected ? '#3a2a0a' : '#fff8ee',
-              color: allSelected ? '#fff' : '#5a3e1b',
-              border: '1px solid #c8a96e', borderRadius: 4,
-              fontFamily: 'Georgia, serif', fontSize: 10,
-              cursor: 'pointer'
-            }}>
-            {allSelected ? 'Deselect All' : 'Select All'}
-          </button>
-        </div>
+          {allSelected ? 'All ✓' : 'All'}
+        </button>
   
-        {/* Category buttons — wrapped horizontal */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-          {categories.map(cat => {
-            const active = selectedCategories.includes(cat.name)
-            return (
-              <button key={cat.name} onClick={() => toggleCategory(cat.name)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 3,
-                  padding: '3px 7px',
-                  background: active ? '#3a2a0a' : '#fff8ee',
-                  color: active ? '#fff' : '#5a3e1b',
-                  border: '1px solid #c8a96e', borderRadius: 4,
-                  fontFamily: 'Georgia, serif', fontSize: 10,
-                  cursor: 'pointer', whiteSpace: 'nowrap'
-                }}>
-                <span>{cat.icon}</span>
-                <span>{cat.name}</span>
-              </button>
-            )
-          })}
-        </div>
+        {categories.map(cat => {
+          const active = selectedCategories.includes(cat.name)
+          return (
+            <button key={cat.name} onClick={() => toggleCategory(cat.name)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 3,
+                padding: '3px 8px', flexShrink: 0,
+                background: active ? '#3a2a0a' : '#fff8ee',
+                color: active ? '#fff' : '#5a3e1b',
+                border: '1px solid #c8a96e', borderRadius: 4,
+                fontFamily: 'Georgia, serif', fontSize: 10,
+                cursor: 'pointer', whiteSpace: 'nowrap'
+              }}>
+              <span>{cat.icon}</span>
+              <span>{cat.name}</span>
+            </button>
+          )
+        })}
       </div>
     )
   }

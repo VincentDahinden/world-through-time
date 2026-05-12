@@ -11,42 +11,28 @@ export default function Timeline({ currentYear, onYearChange }) {
   
     return (
       <div style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0,
-        padding: '10px 300px 10px 215px',
-        background: '#f5e6c8', borderTop: '2px solid #8b6914',
-        fontFamily: 'Georgia, serif', zIndex: 10
+        position: 'fixed', top: 340, left: 0, right: 0,
+        height: 60, background: '#f5e6c8',
+        borderBottom: '2px solid #8b6914',
+        padding: '0 24px', fontFamily: 'Georgia, serif',
+        display: 'flex', alignItems: 'center', gap: 12, zIndex: 15
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{
+          fontSize: 20, fontWeight: 'bold',
+          color: '#3a2a0a', whiteSpace: 'nowrap', minWidth: 50
+        }}>
+          {currentYear}
+        </div>
   
-          {/* Slider + labels */}
-          <div style={{ flex: 1 }}>
-            <div style={{
-              textAlign: 'center', fontSize: 20,
-              fontWeight: 'bold', color: '#3a2a0a', marginBottom: 4
-            }}>
-              {currentYear}
-            </div>
-            <input type="range" min="1400" max="1600"
-              value={currentYear}
-              onChange={e => onYearChange(Number(e.target.value))}
-              style={{ width: '100%', cursor: 'pointer' }}
-            />
-            <div style={{
-              display: 'flex', justifyContent: 'space-between',
-              fontSize: 11, color: '#7a6040', marginTop: 2
-            }}>
-              <span>1400</span>
-              <span>1500</span>
-              <span>1600</span>
-            </div>
-          </div>
+        <input type="range" min="1400" max="1600"
+          value={currentYear}
+          onChange={e => onYearChange(Number(e.target.value))}
+          style={{ flex: 1, cursor: 'pointer' }}
+        />
   
-          {/* Both buttons grouped on the right */}
-          <div style={{ display: 'flex', gap: 4 }}>
-            <button onClick={decrease} style={btnStyle}>‹</button>
-            <button onClick={increase} style={btnStyle}>›</button>
-          </div>
-  
+        <div style={{ display: 'flex', gap: 4 }}>
+          <button onClick={decrease} style={btnStyle}>‹</button>
+          <button onClick={increase} style={btnStyle}>›</button>
         </div>
       </div>
     )

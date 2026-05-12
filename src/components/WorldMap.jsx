@@ -27,7 +27,7 @@ const categoryIcons = {
   const [cities, setCities] = useState([])
   const [events, setEvents] = useState([])
   const [viewState, setViewState] = useState({
-    longitude: 20, latitude: 25, zoom: 2
+    longitude: 20, latitude: 25, zoom: 2.5
   })
 
   const fontSize = viewState.zoom < 3 ? 0 : Math.max(6, Math.min(18, (viewState.zoom - 2) * 4))
@@ -65,7 +65,7 @@ const categoryIcons = {
       <Map
         {...viewState}
         onMove={e => setViewState(e.viewState)}
-        style={{ width: '100%', height: '100vh' }}
+        style={{ width: '100%', height: 'calc(100vh - 400px)', marginTop: 400 }}
         mapStyle={`https://tiles.stadiamaps.com/styles/stamen_watercolor.json?api_key=${import.meta.env.VITE_STADIA_API_KEY}`}
       >
         {cities.map(city => (

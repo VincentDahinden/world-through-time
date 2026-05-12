@@ -42,15 +42,15 @@ export default function DetailsPanel({ selectedEvent, currentYear }) {
 
   if (!selectedEvent) return (
     <div style={{
-      position: 'fixed', right: 0, top: 0, bottom: 260,
-      width: 280, background: '#fdf6e3',
-      borderLeft: '2px solid #c8a96e',
+      position: 'fixed', top: 40, left: 0, right: 0,
+      height: 250, background: '#fdf6e3',
+      borderBottom: '2px solid #c8a96e',
       fontFamily: 'Georgia, serif',
       display: 'flex', alignItems: 'center',
-      justifyContent: 'center', padding: 24,
-      color: '#a08050', fontSize: 13, textAlign: 'center'
+      justifyContent: 'center',
+      color: '#a08050', fontSize: 13, zIndex: 15
     }}>
-      Click a marker to explore history
+      Click a marker on the map to explore history
     </div>
   )
 
@@ -60,30 +60,22 @@ export default function DetailsPanel({ selectedEvent, currentYear }) {
 
   return (
     <div style={{
-      position: 'fixed', right: 0, top: 0, bottom: 260,
-      width: 280, background: '#fdf6e3',
-      borderLeft: '2px solid #c8a96e',
+      position: 'fixed', top: 40, left: 0, right: 0,
+      height: 130, background: '#fdf6e3',
+      borderBottom: '2px solid #c8a96e',
       fontFamily: 'Georgia, serif',
-      overflowY: 'auto', padding: 20, zIndex: 10
+      display: 'flex', alignItems: 'flex-start',
+      gap: 24, padding: '12px 24px',
+      overflowX: 'auto', zIndex: 15
     }}>
 
-      {/* Entity */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10
-      }}>
-        <div style={{
-          width: 10, height: 10, borderRadius: '50%',
-          background: entityColor, flexShrink: 0
-        }} />
-        <span style={{ fontSize: 11, color: '#a08050' }}>{entityName}</span>
-      </div>
-
-      {/* Ruler */}
+      {/* Ruler block */}
       {ruler && (
         <div style={{
-          background: '#f5ede0', borderRadius: 6,
-          padding: '8px 12px', marginBottom: 14,
-          borderLeft: `3px solid ${entityColor}`
+          background: '#f0e6cc', borderRadius: 6,
+          padding: '8px 12px', flexShrink: 0,
+          borderLeft: `3px solid ${entityColor}`,
+          minWidth: 160
         }}>
           <div style={{ fontSize: 10, color: '#a08050', marginBottom: 2 }}>
             Current Ruler
@@ -94,47 +86,49 @@ export default function DetailsPanel({ selectedEvent, currentYear }) {
           <div style={{ fontSize: 11, color: '#7a6040' }}>
             {ruler.title} · {ruler.reign_start}–{ruler.reign_end}
           </div>
+          <div style={{ fontSize: 11, color: entityColor, marginTop: 2 }}>
+            {entityName}
+          </div>
         </div>
       )}
 
-      {/* Category */}
-      <div style={{ fontSize: 11, color: '#a08050', marginBottom: 6 }}>
-        {selectedEvent.category}
+      {/* Divider */}
+      <div style={{ width: 1, background: '#e8d8b0', alignSelf: 'stretch', flexShrink: 0 }} />
+
+      {/* Event details */}
+      <div style={{ flex: 1, minWidth: 300 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+          <span style={{ fontSize: 11, color: '#a08050' }}>{selectedEvent.category}</span>
+          <span style={{
+            background: st.bg, color: st.color,
+            borderRadius: 4, padding: '1px 6px', fontSize: 10
+          }}>{st.label}</span>
+        </div>
+        <div style={{
+          fontSize: 15, fontWeight: 'bold',
+          color: '#2a1a0a', marginBottom: 4, lineHeight: 1.3
+        }}>
+          {selectedEvent.title}
+        </div>
+        <div style={{ fontSize: 12, color: '#7a6040' }}>
+          {selectedEvent.year}
+          {selectedEvent.year_end ? ` — ${selectedEvent.year_end}` : ''}
+          {' · '}{selectedEvent.location_name}
+        </div>
       </div>
 
-      {/* Title */}
-      <div style={{
-        fontSize: 16, fontWeight: 'bold',
-        color: '#2a1a0a', marginBottom: 8, lineHeight: 1.3
-      }}>
-        {selectedEvent.title}
-      </div>
-
-      {/* Year and location */}
-      <div style={{ fontSize: 13, color: '#7a6040', marginBottom: 12 }}>
-        {selectedEvent.year}
-        {selectedEvent.year_end ? ` — ${selectedEvent.year_end}` : ''}
-        {' · '}
-        {selectedEvent.location_name}
-      </div>
-
-      {/* Status badge */}
-      <div style={{
-        display: 'inline-block',
-        background: st.bg, color: st.color,
-        borderRadius: 4, padding: '2px 8px',
-        fontSize: 11, marginBottom: 14
-      }}>
-        {st.label}
-      </div>
+      {/* Divider */}
+      <div style={{ width: 1, background: '#e8d8b0', alignSelf: 'stretch', flexShrink: 0 }} />
 
       {/* Description */}
       <div style={{
-        fontSize: 13, color: '#3a2a0a',
-        lineHeight: 1.7, borderTop: '1px solid #e8d8b0', paddingTop: 12
+        fontSize: 12, color: '#3a2a0a',
+        lineHeight: 1.6, flex: 2, minWidth: 300,
+        overflowY: 'auto', maxHeight: 106
       }}>
         {selectedEvent.description}
       </div>
+
     </div>
   )
 }
