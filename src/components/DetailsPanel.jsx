@@ -16,6 +16,8 @@ const entityColors = {
     'Kingdom of England':       '#9B1B30',
     'Kingdom of France':        '#1B4B8A',
     'Safavid Empire':           '#00827F',
+    'Roman Britain':            '#6B2D8B',
+    'Anglo-Saxon England':      '#B8860B',
   }
 
 function DynasticTimeline({ rulers, currentRuler, entityColor }) {
