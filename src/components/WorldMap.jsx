@@ -28,7 +28,8 @@ const categoryIcons = {
   const [events, setEvents] = useState([])
   const [viewState, setViewState] = useState({
     longitude: 20, latitude: 25, zoom: 2.5
-  })
+     })
+  const [hoveredEvent, setHoveredEvent] = useState(null)
 
   const fontSize = viewState.zoom < 3 ? 0 : Math.max(6, Math.min(18, (viewState.zoom - 2) * 4))
 
@@ -94,14 +95,46 @@ const categoryIcons = {
     latitude={event.latitude}
     onClick={() => onEventSelect && onEventSelect(event)}
   >
-    <div style={{
-      fontSize: viewState.zoom < 3 ? 10 : Math.max(10, Math.min(20, viewState.zoom * 3)),
-cursor: 'pointer',
-      filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))',
-      userSelect: 'none',
-      lineHeight: 1
-    }}>
-      {categoryIcons[event.category] || '📍'}
+    <div
+      onMouseEnter={() => setHoveredEvent(event)}
+      onMouseLeave={() => setHoveredEvent(null)}
+      style={{ position: 'relative', cursor: 'pointer' }}
+    >
+      <div style={{
+        fontSize: viewState.zoom < 3 ? 10 : Math.max(10, Math.min(20, viewState.zoom * 3)),
+        filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))',
+        userSelect: 'none',
+        lineHeight: 1
+      }}>
+        {categoryIcons[event.category] || '📍'}
+      </div>
+
+      {hoveredEvent?.id === event.id && (
+        <div style={{
+          position: 'absolute',
+          bottom: '100%',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'rgba(58, 42, 10, 0.92)',
+          color: '#f5e6c8',
+          fontFamily: 'Georgia, serif',
+          fontSize: 11,
+          padding: '5px 9px',
+          borderRadius: 5,
+          whiteSpace: 'nowrap',
+          pointerEvents: 'none',
+          zIndex: 100,
+          marginBottom: 4,
+          boxShadow: '0 2px 6px rgba(0,0,0,0.3)'
+        }}>
+          {event.title}
+          <div style={{
+            fontSize: 10, color: '#c8a96e', marginTop: 2
+          }}>
+            {event.year}{event.year_end ? `–${event.year_end}` : ''}
+          </div>
+        </div>
+      )}
     </div>
   </Marker>
 ))}
