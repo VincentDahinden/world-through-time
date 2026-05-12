@@ -80,7 +80,7 @@ const [hoveredCluster, setHoveredCluster] = useState(null)
   const clusterRadius = showIndividual ? 0.3 : 8
 
   useEffect(() => {
-    async function fetchCities() {
+    const timer = setTimeout(async () => {
       const { data, error } = await supabase
         .from('cities')
         .select('*')
@@ -88,23 +88,23 @@ const [hoveredCluster, setHoveredCluster] = useState(null)
         .or(`active_to.is.null,active_to.gte.${currentYear}`)
       if (error) console.error('Cities error:', error)
       else setCities(data)
-    }
-    fetchCities()
+    }, 50)
+    return () => clearTimeout(timer)
   }, [currentYear])
 
   useEffect(() => {
-    async function fetchEvents() {
+    const timer = setTimeout(async () => {
       const { data, error } = await supabase
         .from('events')
         .select('*, entities(name, colour)')
         .lte('year', currentYear)
-        .or(`year_end.gte.${currentYear},and(year_end.is.null,year.gte.${currentYear - 3})`)
+        .or(`year_end.gte.${currentYear},and(year_end.is.null,year.gte.${currentYear - 3},year.lte.${currentYear})`)
         .in('category', selectedCategories.length > 0 ? selectedCategories : ['none'])
         .in('entity_id', selectedEntities.length > 0 ? selectedEntities : [0])
       if (error) console.error('Events error:', error)
       else setEvents(data)
-    }
-    fetchEvents()
+    }, 50)
+    return () => clearTimeout(timer)
   }, [currentYear, selectedCategories, selectedEntities])
 
   const clusters = clusterEvents(
