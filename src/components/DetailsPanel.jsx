@@ -8,12 +8,13 @@ const statusConfig = {
 }
 
 const entityColors = {
-  'Ottoman Empire':           '#C0622A',
-  'Ming Dynasty':             '#3A6FA8',
-  'Crown of Castile / Spain': '#8A4CAF',
-  'Aztec Empire':             '#2A9A4A',
-  'New Spain':                '#A07830',
-}
+    'Ottoman Empire':           '#C0622A',
+    'Ming Dynasty':             '#3A6FA8',
+    'Crown of Castile / Spain': '#8A4CAF',
+    'Aztec Empire':             '#2A9A4A',
+    'New Spain':                '#A07830',
+    'Kingdom of England':       '#9B1B30',
+  }
 
 function DynasticTimeline({ rulers, currentRuler, entityColor }) {
     if (!rulers || rulers.length === 0 || !currentRuler) return null
