@@ -21,7 +21,7 @@ function App() {
   const [selectedEntities, setSelectedEntities] = useState(ALL_ENTITIES)
 
   return (
-    <div style={{ width: '100vw', height: '100vh' }}>
+    <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
       <WorldMap
         currentYear={currentYear}
         selectedCategories={selectedCategories}
