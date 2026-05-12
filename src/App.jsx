@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { supabase } from './lib/supabase'
 import WorldMap from './components/WorldMap'
 import Timeline from './components/Timeline'
 import DetailsPanel from './components/DetailsPanel'
@@ -12,41 +13,50 @@ const ALL_CATEGORIES = [
   'Environment & Ecology', 'Collapse & Transformation'
 ]
 
-const ALL_ENTITIES = [1, 2, 3, 4, 5,6,7,8]
+const ALL_ENTITIES = [1, 2, 3, 4, 5, 6, 7, 8]
 
 function App() {
   const [currentYear, setCurrentYear] = useState(1500)
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [selectedCategories, setSelectedCategories] = useState(ALL_CATEGORIES)
   const [selectedEntities, setSelectedEntities] = useState(ALL_ENTITIES)
+  const [yearRange, setYearRange] = useState({ min: 1400, max: 1600 })
+
+  useEffect(() => {
+    async function fetchYearRange() {
+      const { data, error } = await supabase
+        .from('events')
+        .select('year, year_end')
+      if (error) return
+      const years = data.flatMap(e => [e.year, e.year_end].filter(Boolean))
+      const min = Math.min(...years)
+      const max = Math.max(...years)
+      setYearRange({ min, max })
+      setCurrentYear(1500)
+    }
+    fetchYearRange()
+  }, [])
 
   return (
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
       <div style={{
-  position: 'fixed', top: 0, left: 0, right: 0,
-  zIndex: 30, padding: '0 16px',
-  height: 35, display: 'flex', alignItems: 'center',
-  background: '#3a2a0a',
-  pointerEvents: 'none'
-}}>
-  <span style={{
-    fontFamily: 'Georgia, serif',
-    fontSize: 16, fontWeight: 'bold',
-    color: '#f5e6c8', letterSpacing: 2,
-    textTransform: 'uppercase',
-    textShadow: '0 1px 3px rgba(0,0,0,0.5)',
-    flex: 1, textAlign: 'center'
-  }}>
-    The World Through Time
-  </span>
-  <span style={{
-    fontFamily: 'Georgia, serif',
-    fontSize: 11, color: '#c8a96e',
-    marginLeft: 10, letterSpacing: 1
-  }}>
-    1400 – 1600
-  </span>
-</div>
+        position: 'fixed', top: 0, left: 0, right: 0,
+        zIndex: 30, padding: '0 16px',
+        height: 35, display: 'flex', alignItems: 'center',
+        background: '#3a2a0a', pointerEvents: 'none'
+      }}>
+        <span style={{
+          fontFamily: 'Georgia, serif',
+          fontSize: 16, fontWeight: 'bold',
+          color: '#f5e6c8', letterSpacing: 2,
+          textTransform: 'uppercase',
+          textShadow: '0 1px 3px rgba(0,0,0,0.5)',
+          flex: 1, textAlign: 'center'
+        }}>
+          The World Through Time
+        </span>
+      </div>
+
       <WorldMap
         currentYear={currentYear}
         selectedCategories={selectedCategories}
@@ -60,6 +70,8 @@ function App() {
       <Timeline
         currentYear={currentYear}
         onYearChange={setCurrentYear}
+        minYear={yearRange.min}
+        maxYear={yearRange.max}
       />
       <DetailsPanel
         selectedEvent={selectedEvent}
