@@ -76,8 +76,8 @@ const [hoveredCluster, setHoveredCluster] = useState(null)
   })
 
   const fontSize = viewState.zoom < 4 ? 0 : Math.max(6, Math.min(18, (viewState.zoom - 2) * 4))
-  const showIndividual = viewState.zoom >= 6
-  const clusterRadius = showIndividual ? 0.3 : 8
+  const showIndividual = viewState.zoom >= 5
+const clusterRadius = viewState.zoom < 3 ? 5 : showIndividual ? 0.3 : 4
 
   useEffect(() => {
     const timer = setTimeout(async () => {
