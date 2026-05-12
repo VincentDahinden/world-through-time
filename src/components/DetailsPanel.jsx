@@ -61,7 +61,7 @@ export default function DetailsPanel({ selectedEvent, currentYear }) {
   return (
     <div style={{
       position: 'fixed', top: 40, left: 0, right: 0,
-      height: 130, background: '#fdf6e3',
+      height: 255, background: '#fdf6e3',
       borderBottom: '2px solid #c8a96e',
       fontFamily: 'Georgia, serif',
       display: 'flex', alignItems: 'flex-start',
@@ -120,14 +120,27 @@ export default function DetailsPanel({ selectedEvent, currentYear }) {
       {/* Divider */}
       <div style={{ width: 1, background: '#e8d8b0', alignSelf: 'stretch', flexShrink: 0 }} />
 
-      {/* Description */}
-      <div style={{
-        fontSize: 12, color: '#3a2a0a',
-        lineHeight: 1.6, flex: 2, minWidth: 300,
-        overflowY: 'auto', maxHeight: 106
+     {/* Description + Wikipedia link */}
+<div style={{
+  fontSize: 12, color: '#3a2a0a',
+  lineHeight: 1.6, flex: 2, minWidth: 300,
+  overflowY: 'auto', maxHeight: 106
+}}>
+  {selectedEvent.description}
+  {selectedEvent.wikipedia_url && (
+    <a href={selectedEvent.wikipedia_url}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{
+        display: 'inline-block', marginTop: 8,
+        fontSize: 11, color: '#8a4caf',
+        textDecoration: 'none',
+        borderBottom: '1px solid #8a4caf'
       }}>
-        {selectedEvent.description}
-      </div>
+      Read more on Wikipedia
+    </a>
+  )}
+</div>
 
     </div>
   )
