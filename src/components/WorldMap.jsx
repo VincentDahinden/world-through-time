@@ -61,11 +61,11 @@ const categoryIcons = {
   }, [currentYear])
 
   return (
-    <>
+    <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}>
       <Map
         {...viewState}
         onMove={e => setViewState(e.viewState)}
-        style={{ width: '100%', height: 'calc(100vh - 400px)', marginTop: 400 }}
+        style={{ width: '100vw', height: 'calc(100vh - 400px)', marginTop: 400 }}
         mapStyle={`https://tiles.stadiamaps.com/styles/stamen_watercolor.json?api_key=${import.meta.env.VITE_STADIA_API_KEY}`}
       >
         {cities.map(city => (
@@ -106,6 +106,6 @@ cursor: 'pointer',
   </Marker>
 ))}
       </Map>
-    </>
+    </div>
   )
 }
