@@ -19,7 +19,7 @@ const entities = [
   
     return (
       <div style={{
-        position: 'fixed', top: 0, left: 0, right: 0,
+        position: 'fixed', top: 35, left: 0, right: 0,
         height: 40, background: '#3a2a0a',
         borderBottom: '2px solid #c8a96e',
         fontFamily: 'Georgia, serif',
