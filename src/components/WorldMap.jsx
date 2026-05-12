@@ -67,7 +67,7 @@ const categoryIcons = {
         {...viewState}
         onMove={e => setViewState(e.viewState)}
         style={{ width: '100vw', height: 'calc(100vh - 400px)', marginTop: 400 }}
-        mapStyle={`https://tiles.stadiamaps.com/styles/stamen_watercolor.json?api_key=${import.meta.env.VITE_STADIA_API_KEY}`}
+        mapStyle={`https://api.maptiler.com/maps/aquarelle/style.json?key=${import.meta.env.VITE_MAPTILER_API_KEY}`}
       >
         {cities.map(city => (
           <Marker key={city.id} longitude={city.longitude} latitude={city.latitude}>
