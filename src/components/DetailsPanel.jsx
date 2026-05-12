@@ -60,7 +60,7 @@ export default function DetailsPanel({ selectedEvent, currentYear }) {
 
   return (
     <div style={{
-      position: 'fixed', top: 40, left: 0, right: 0,
+      position: 'fixed', top: 75, left: 0, right: 0,
       height: 255, background: '#fdf6e3',
       borderBottom: '2px solid #c8a96e',
       fontFamily: 'Georgia, serif',
