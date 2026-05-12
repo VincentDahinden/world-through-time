@@ -23,7 +23,7 @@ const categoryIcons = {
   }
 
 
-export default function WorldMap({ currentYear, selectedCategories, onEventSelect }) {
+  export default function WorldMap({ currentYear, selectedCategories, selectedEntities, onEventSelect }) {
   const [cities, setCities] = useState([])
   const [events, setEvents] = useState([])
   const [viewState, setViewState] = useState({
@@ -53,6 +53,7 @@ export default function WorldMap({ currentYear, selectedCategories, onEventSelec
         .lte('year', currentYear)
         .or(`year_end.is.null,year_end.gte.${currentYear}`)
         .in('category', selectedCategories.length > 0 ? selectedCategories : ['none'])
+        .in('entity_id', selectedEntities.length > 0 ? selectedEntities : [0])
       if (error) console.error('Events error:', error)
       else setEvents(data)
     }
@@ -95,7 +96,7 @@ export default function WorldMap({ currentYear, selectedCategories, onEventSelec
   >
     <div style={{
       fontSize: viewState.zoom < 3 ? 10 : Math.max(10, Math.min(20, viewState.zoom * 3)),
-      cursor: 'pointer',
+cursor: 'pointer',
       filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))',
       userSelect: 'none',
       lineHeight: 1
