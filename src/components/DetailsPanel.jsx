@@ -14,6 +14,8 @@ const entityColors = {
     'Aztec Empire':             '#2A9A4A',
     'New Spain':                '#A07830',
     'Kingdom of England':       '#9B1B30',
+    'Kingdom of France':        '#1B4B8A',
+    'Safavid Empire':           '#00827F',
   }
 
 function DynasticTimeline({ rulers, currentRuler, entityColor }) {

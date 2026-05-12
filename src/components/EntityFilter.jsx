@@ -5,6 +5,8 @@ const entities = [
     { id: 4, name: 'Aztec Empire',             short: 'Aztec',     colour: '#2A9A4A' },
     { id: 5, name: 'New Spain',                short: 'New Spain', colour: '#A07830' },
     { id: 6, name: 'Kingdom of England',       short: 'England',   colour: '#9B1B30' },
+    { id: 7, name: 'Kingdom of France',        short: 'France',    colour: '#1B4B8A' },
+    { id: 8, name: 'Safavid Empire',           short: 'Persia',    colour: '#00827F' },
   ]
   
   export default function EntityFilter({ selectedEntities, onEntityChange }) {
