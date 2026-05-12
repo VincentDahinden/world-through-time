@@ -1,7 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
 
+const SPEEDS = [
+  { label: 'Slow', value: 1500 },
+  { label: 'Normal', value: 800 },
+  { label: 'Fast', value: 300 },
+]
+
 export default function Timeline({ currentYear, onYearChange }) {
   const [playing, setPlaying] = useState(false)
+  const [speedIndex, setSpeedIndex] = useState(1)
   const intervalRef = useRef(null)
 
   const decrease = () => onYearChange(Math.max(1400, currentYear - 1))
@@ -17,12 +24,12 @@ export default function Timeline({ currentYear, onYearChange }) {
           }
           return prev + 1
         })
-      }, 800)
+      }, SPEEDS[speedIndex].value)
     } else {
       clearInterval(intervalRef.current)
     }
     return () => clearInterval(intervalRef.current)
-  }, [playing])
+  }, [playing, speedIndex])
 
   const btnStyle = {
     background: '#3a2a0a', color: '#f5e6c8',
@@ -52,7 +59,28 @@ export default function Timeline({ currentYear, onYearChange }) {
         style={{ flex: 1, cursor: 'pointer' }}
       />
 
-      <div style={{ display: 'flex', gap: 4 }}>
+      <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+        {/* Speed buttons */}
+        {SPEEDS.map((speed, idx) => (
+          <button
+            key={speed.label}
+            onClick={() => setSpeedIndex(idx)}
+            style={{
+              padding: '3px 8px',
+              background: speedIndex === idx ? '#3a2a0a' : '#fff8ee',
+              color: speedIndex === idx ? '#fff' : '#5a3e1b',
+              border: '1px solid #c8a96e',
+              borderRadius: 4,
+              fontFamily: 'Georgia, serif',
+              fontSize: 10,
+              cursor: 'pointer',
+              flexShrink: 0
+            }}>
+            {speed.label}
+          </button>
+        ))}
+
+        {/* Year back/forward/play */}
         <button onClick={decrease} style={btnStyle}>‹</button>
         <button onClick={increase} style={btnStyle}>›</button>
         <button onClick={() => setPlaying(p => !p)} style={{

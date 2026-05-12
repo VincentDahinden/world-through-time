@@ -70,6 +70,7 @@ export default function WorldMap({ currentYear, selectedCategories, selectedEnti
   const [cities, setCities] = useState([])
   const [events, setEvents] = useState([])
   const [hoveredEvent, setHoveredEvent] = useState(null)
+const [hoveredCluster, setHoveredCluster] = useState(null)
   const [viewState, setViewState] = useState({
     longitude: 20, latitude: 25, zoom: 2.5
   })
@@ -97,7 +98,7 @@ export default function WorldMap({ currentYear, selectedCategories, selectedEnti
         .from('events')
         .select('*, entities(name, colour)')
         .lte('year', currentYear)
-        .or(`year_end.is.null,year_end.gte.${currentYear}`)
+        .or(`year_end.gte.${currentYear},and(year_end.is.null,year.gte.${currentYear - 3})`)
         .in('category', selectedCategories.length > 0 ? selectedCategories : ['none'])
         .in('entity_id', selectedEntities.length > 0 ? selectedEntities : [0])
       if (error) console.error('Events error:', error)
@@ -144,28 +145,67 @@ export default function WorldMap({ currentYear, selectedCategories, selectedEnti
           const isCluster = cluster.events.length > 1 && !showIndividual
 
           if (isCluster) {
-            // Show cluster circle with count
             const color = cluster.events.every(e => e.category === cluster.events[0].category)
               ? categoryColors[cluster.dominantCat] || '#3a2a0a'
               : '#3a2a0a'
             const size = Math.min(14 + cluster.events.length * 2, 32)
-
+          
             return (
               <Marker key={`cluster-${i}`} longitude={cluster.lng} latitude={cluster.lat}>
-                <div style={{
-                  width: size, height: size,
-                  borderRadius: '50%',
-                  background: color,
-                  border: '2px solid #c8a96e',
-                  color: '#f5e6c8',
-                  fontFamily: 'Georgia, serif',
-                  fontSize: 11, fontWeight: 'bold',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer',
-                  boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
-                  opacity: 0.85
-                }}>
-                  {cluster.events.length}
+                <div
+                  onMouseEnter={() => setHoveredCluster(i)}
+                  onMouseLeave={() => setHoveredCluster(null)}
+                  style={{ position: 'relative', cursor: 'pointer' }}
+                >
+                  <div style={{
+                    width: size, height: size,
+                    borderRadius: '50%',
+                    background: color,
+                    border: '2px solid #c8a96e',
+                    color: '#f5e6c8',
+                    fontFamily: 'Georgia, serif',
+                    fontSize: 11, fontWeight: 'bold',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+                    opacity: 0.85
+                  }}>
+                    {cluster.events.length}
+                  </div>
+          
+                  {hoveredCluster === i && (
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '100%',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      background: 'rgba(58, 42, 10, 0.92)',
+                      color: '#f5e6c8',
+                      fontFamily: 'Georgia, serif',
+                      fontSize: 11,
+                      padding: '6px 10px',
+                      borderRadius: 5,
+                      whiteSpace: 'nowrap',
+                      pointerEvents: 'none',
+                      zIndex: 100,
+                      marginBottom: 4,
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 4
+                    }}>
+                      {cluster.events.map(ev => (
+                        <div key={ev.id}>
+                          <span style={{ marginRight: 5 }}>
+                            {categoryIcons[ev.category] || '📍'}
+                          </span>
+                          {ev.title}
+                          <span style={{ color: '#c8a96e', marginLeft: 5, fontSize: 10 }}>
+                            {ev.year}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </Marker>
             )
