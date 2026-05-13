@@ -26,7 +26,11 @@ const entities = [
       <div style={{
         position: 'fixed', top: 35, left: 0, right: 0,
         height: 40, background: '#3a2a0a',
+        borderTop: '2px solid #c8a96e',
         borderBottom: '2px solid #c8a96e',
+        borderLeft: '2px solid #c8a96e',
+        borderRight: '2px solid #c8a96e',
+boxShadow: 'inset 0 -5px 0 -3px #c8a96e, inset 5px 0 0 -3px #c8a96e, inset -5px 0 0 -3px #c8a96e',
         fontFamily: 'Georgia, serif',
         display: 'flex', alignItems: 'center',
         padding: '0 16px', gap: 8, zIndex: 20

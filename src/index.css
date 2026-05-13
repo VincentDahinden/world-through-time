@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English:ital@0;1&display=swap');
+
 * {
   margin: 0;
   padding: 0;
@@ -8,5 +10,23 @@ body {
   overflow: hidden;
 }
 
-/* Import historical fonts from Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English:ital@0;1&display=swap');
+.parchment {
+  background-color: #fdf6e3;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+}
+.double-border {
+  position: relative;
+}
+
+.double-border::after {
+  content: '';
+  position: fixed;
+  top: 79px;
+  left: 4px;
+  right: 4px;
+  height: 247px;
+  border: 1px solid #8b6914;
+  pointer-events: none;
+  z-index: 20;
+}

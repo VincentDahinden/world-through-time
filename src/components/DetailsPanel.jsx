@@ -39,43 +39,29 @@ function DynasticTimeline({ rulers, currentRuler, entityColor }) {
       }}>
         {currentRuler.dynasty} ({minYear}–{maxYear})
       </div>
-
       <div style={{
         position: 'relative', height: 20,
         background: '#e8d8b0', borderRadius: 4,
         overflow: 'hidden'
       }}>
         {dynastyRulers.map(ruler => {
-          const start = ruler.reign_start
-          const end = ruler.reign_end
-          const left = ((start - minYear) / totalSpan) * 100
-          const width = ((end - start) / totalSpan) * 100
+          const left = ((ruler.reign_start - minYear) / totalSpan) * 100
+          const width = ((ruler.reign_end - ruler.reign_start) / totalSpan) * 100
           const isCurrent = ruler.id === currentRuler.id
           const isDisputed = ruler.status === 'disputed'
-
           return (
-            <div
-              key={ruler.id}
+            <div key={ruler.id}
               title={`${ruler.name} (${ruler.reign_start}–${ruler.reign_end})`}
               style={{
                 position: 'absolute',
-                left: `${left}%`,
-                width: `${width}%`,
-                height: '100%',
-                background: isCurrent
-                  ? entityColor
-                  : isDisputed
-                  ? '#c8a96e'
-                  : `${entityColor}66`,
-                borderRight: '1px solid #fff',
-                boxSizing: 'border-box',
-                cursor: 'default'
+                left: `${left}%`, width: `${width}%`, height: '100%',
+                background: isCurrent ? entityColor : isDisputed ? '#c8a96e' : `${entityColor}66`,
+                borderRight: '1px solid #fff', boxSizing: 'border-box'
               }}
             />
           )
         })}
       </div>
-
       <div style={{
         display: 'flex', justifyContent: 'space-between',
         fontSize: 9, color: '#a08050', marginTop: 2,
@@ -91,43 +77,46 @@ function DynasticTimeline({ rulers, currentRuler, entityColor }) {
 
 function useEntityRulers(entityId) {
   const [rulers, setRulers] = useState([])
-
   useEffect(() => {
     if (!entityId) return
     async function fetchRulers() {
       const { data } = await supabase
-        .from('rulers')
-        .select('*')
+        .from('rulers').select('*')
         .eq('entity_id', entityId)
         .order('reign_start', { ascending: true })
       setRulers(data || [])
     }
     fetchRulers()
   }, [entityId])
-
   return rulers
 }
 
 function useCurrentRuler(entityId, currentYear) {
   const [ruler, setRuler] = useState(null)
-
   useEffect(() => {
     if (!entityId || !currentYear) return
     async function fetchRuler() {
       const { data } = await supabase
-        .from('rulers')
-        .select('*, entities(name)')
+        .from('rulers').select('*, entities(name)')
         .eq('entity_id', entityId)
         .lte('reign_start', currentYear)
         .gte('reign_end', currentYear)
-        .limit(1)
-        .single()
+        .limit(1).single()
       setRuler(data)
     }
     fetchRuler()
   }, [entityId, currentYear])
-
   return ruler
+}
+
+const panelBase = {
+  position: 'fixed', top: 75, left: 0, right: 0,
+  height: 255,
+  background: '#fdf6e3',
+  borderLeft: '2px solid #c8a96e',
+  borderRight: '2px solid #c8a96e',
+  borderBottom: '2px solid #c8a96e',
+  zIndex: 15
 }
 
 export default function DetailsPanel({ selectedEvent, currentYear }) {
@@ -135,17 +124,14 @@ export default function DetailsPanel({ selectedEvent, currentYear }) {
   const allRulers = useEntityRulers(selectedEvent?.entity_id)
 
   if (!selectedEvent) return (
-    <div style={{
-      position: 'fixed', top: 75, left: 0, right: 0,
-      height: 255, background: '#fdf6e3',
-      borderBottom: '2px solid #c8a96e',
+    <div className="parchment double-border" style={{
+      ...panelBase,
       fontFamily: 'Georgia, serif',
       display: 'flex', alignItems: 'center',
       justifyContent: 'center',
-      color: '#a08050', fontSize: 13, zIndex: 15,
-      letterSpacing: 1
+      color: '#a08050', fontSize: 13, letterSpacing: 1
     }}>
-      Click a marker on the map to explore history
+     
     </div>
   )
 
@@ -154,151 +140,84 @@ export default function DetailsPanel({ selectedEvent, currentYear }) {
   const entityColor = entityColors[entityName] || '#999'
 
   return (
-    <div style={{
-      position: 'fixed', top: 75, left: 0, right: 0,
-      height: 255, background: '#fdf6e3',
-      borderBottom: '2px solid #c8a96e',
+    <div className="parchment" style={{
+      ...panelBase,
       fontFamily: 'Georgia, serif',
       display: 'flex', alignItems: 'flex-start',
       gap: 20, padding: '12px 24px',
-      overflowX: 'auto', zIndex: 15
+      overflowX: 'visible'
     }}>
+      <div style={innerBorder} />
 
-      {/* Ruler + Dynasty + Timeline block */}
-      <div style={{ flexShrink: 0, minWidth: 220 }}>
-
-        {/* Entity */}
-        <div style={{
-          display: 'flex', alignItems: 'center',
-          gap: 6, marginBottom: 6
-        }}>
-          <div style={{
-            width: 10, height: 10, borderRadius: '50%',
-            background: entityColor, flexShrink: 0
-          }} />
-          <span style={{
-            fontSize: 11, color: '#a08050',
-            fontFamily: "'Cinzel', serif", letterSpacing: 0.5
-          }}>
+      {/* Ruler + Dynasty + Timeline */}
+      <div style={{ flexShrink: 0, minWidth: 220, zIndex: 2 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: entityColor, flexShrink: 0 }} />
+          <span style={{ fontSize: 11, color: '#a08050', fontFamily: "'Cinzel', serif", letterSpacing: 0.5 }}>
             {entityName}
           </span>
         </div>
 
-        {/* Ruler info */}
         {ruler && (
           <div style={{
             background: '#f0e6cc', borderRadius: 6,
             padding: '8px 12px', marginBottom: 8,
             borderLeft: `3px solid ${entityColor}`
           }}>
-            <div style={{
-              fontSize: 10, color: '#a08050', marginBottom: 2,
-              fontFamily: "'Cinzel', serif", letterSpacing: 0.5,
-              textTransform: 'uppercase'
-            }}>
+            <div style={{ fontSize: 10, color: '#a08050', marginBottom: 2, fontFamily: "'Cinzel', serif", letterSpacing: 0.5, textTransform: 'uppercase' }}>
               Current Ruler
             </div>
-            <div style={{
-              fontSize: 14, fontWeight: 'bold', color: '#2a1a0a',
-              fontFamily: "'Cinzel', serif"
-            }}>
+            <div style={{ fontSize: 14, fontWeight: 'bold', color: '#2a1a0a', fontFamily: "'Cinzel', serif" }}>
               {ruler.name}
             </div>
             <div style={{ fontSize: 11, color: '#7a6040', fontFamily: 'Georgia, serif' }}>
               {ruler.title} · {ruler.reign_start}–{ruler.reign_end}
             </div>
             {ruler.dynasty && (
-              <div style={{
-                fontSize: 11, color: entityColor,
-                marginTop: 2, fontStyle: 'italic',
-                fontFamily: 'Georgia, serif'
-              }}>
+              <div style={{ fontSize: 11, color: entityColor, marginTop: 2, fontStyle: 'italic', fontFamily: 'Georgia, serif' }}>
                 {ruler.dynasty}
               </div>
             )}
           </div>
         )}
 
-        <DynasticTimeline
-          rulers={allRulers}
-          currentRuler={ruler}
-          entityColor={entityColor}
-        />
+        <DynasticTimeline rulers={allRulers} currentRuler={ruler} entityColor={entityColor} />
       </div>
 
       {/* Divider */}
-      <div style={{
-        width: 1, background: '#e8d8b0',
-        alignSelf: 'stretch', flexShrink: 0
-      }} />
+      <div style={{ width: 1, background: '#e8d8b0', alignSelf: 'stretch', flexShrink: 0, zIndex: 2 }} />
 
       {/* Event details */}
-      <div style={{ flex: 1, minWidth: 250 }}>
-        <div style={{
-          display: 'flex', alignItems: 'center',
-          gap: 8, marginBottom: 4
-        }}>
-          <span style={{
-            fontSize: 11, color: '#a08050',
-            fontFamily: "'Cinzel', serif", letterSpacing: 0.5
-          }}>
+      <div style={{ flex: 1, minWidth: 250, zIndex: 2 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+          <span style={{ fontSize: 11, color: '#a08050', fontFamily: "'Cinzel', serif", letterSpacing: 0.5 }}>
             {selectedEvent.category}
           </span>
-          <span style={{
-            background: st.bg, color: st.color,
-            borderRadius: 4, padding: '1px 6px', fontSize: 10,
-            fontFamily: 'Georgia, serif'
-          }}>
+          <span style={{ background: st.bg, color: st.color, borderRadius: 4, padding: '1px 6px', fontSize: 10, fontFamily: 'Georgia, serif' }}>
             {st.label}
           </span>
         </div>
-        <div style={{
-          fontSize: 15, fontWeight: 'bold',
-          color: '#2a1a0a', marginBottom: 4, lineHeight: 1.3,
-          fontFamily: "'Cinzel', serif"
-        }}>
+        <div style={{ fontSize: 15, fontWeight: 'bold', color: '#2a1a0a', marginBottom: 4, lineHeight: 1.3, fontFamily: "'Cinzel', serif" }}>
           {selectedEvent.title}
         </div>
-        <div style={{
-          fontSize: 12, color: '#7a6040', marginBottom: 8,
-          fontFamily: 'Georgia, serif'
-        }}>
-          {selectedEvent.year}
-          {selectedEvent.year_end ? ` — ${selectedEvent.year_end}` : ''}
-          {' · '}{selectedEvent.location_name}
+        <div style={{ fontSize: 12, color: '#7a6040', marginBottom: 8, fontFamily: 'Georgia, serif' }}>
+          {selectedEvent.year}{selectedEvent.year_end ? ` — ${selectedEvent.year_end}` : ''}{' · '}{selectedEvent.location_name}
         </div>
       </div>
 
       {/* Divider */}
-      <div style={{
-        width: 1, background: '#e8d8b0',
-        alignSelf: 'stretch', flexShrink: 0
-      }} />
+      <div style={{ width: 1, background: '#e8d8b0', alignSelf: 'stretch', flexShrink: 0, zIndex: 2 }} />
 
       {/* Description */}
-      <div style={{
-        fontSize: 12, color: '#3a2a0a',
-        lineHeight: 1.7, flex: 2, minWidth: 300,
-        overflowY: 'auto', maxHeight: 230,
-        fontFamily: "'IM Fell English', serif"
-      }}>
+      <div style={{ fontSize: 12, color: '#3a2a0a', lineHeight: 1.7, flex: 2, minWidth: 300, overflowY: 'auto', maxHeight: 230, fontFamily: "'IM Fell English', serif", zIndex: 2 }}>
         {selectedEvent.description}
         {selectedEvent.wikipedia_url && (
-          <a href={selectedEvent.wikipedia_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: 'inline-block', marginTop: 8,
-              fontSize: 11, color: '#8a4caf',
-              textDecoration: 'none',
-              borderBottom: '1px solid #8a4caf',
-              fontFamily: 'Georgia, serif'
-            }}>
+          <a href={selectedEvent.wikipedia_url} target="_blank" rel="noopener noreferrer"
+            style={{ display: 'inline-block', marginTop: 8, fontSize: 11, color: '#8a4caf', textDecoration: 'none', borderBottom: '1px solid #8a4caf', fontFamily: 'Georgia, serif' }}>
             Read more on Wikipedia →
           </a>
         )}
       </div>
-
     </div>
   )
 }
