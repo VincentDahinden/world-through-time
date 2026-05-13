@@ -8,88 +8,86 @@ const statusConfig = {
 }
 
 const entityColors = {
-    'Ottoman Empire':           '#C0622A',
-    'Ming Dynasty':             '#3A6FA8',
-    'Crown of Castile / Spain': '#8A4CAF',
-    'Aztec Empire':             '#2A9A4A',
-    'New Spain':                '#A07830',
-    'Kingdom of England':       '#9B1B30',
-    'Kingdom of France':        '#1B4B8A',
-    'Safavid Empire':           '#00827F',
-    'Roman Britain':            '#6B2D8B',
-    'Anglo-Saxon England':      '#B8860B',
-  }
+  'Ottoman Empire':           '#C0622A',
+  'Ming Dynasty':             '#3A6FA8',
+  'Crown of Castile / Spain': '#8A4CAF',
+  'Aztec Empire':             '#2A9A4A',
+  'New Spain':                '#A07830',
+  'Kingdom of England':       '#9B1B30',
+  'Kingdom of France':        '#1B4B8A',
+  'Safavid Empire':           '#00827F',
+  'Roman Britain':            '#6B2D8B',
+  'Anglo-Saxon England':      '#B8860B',
+}
 
 function DynasticTimeline({ rulers, currentRuler, entityColor }) {
-    if (!rulers || rulers.length === 0 || !currentRuler) return null
-  
-    // Filter to only rulers of the same dynasty
-    const dynastyRulers = rulers.filter(r => r.dynasty === currentRuler.dynasty)
-    if (dynastyRulers.length === 0) return null
-  
-    // Calculate dynasty span from actual ruler dates
-    const minYear = Math.min(...dynastyRulers.map(r => r.reign_start))
-    const maxYear = Math.max(...dynastyRulers.map(r => r.reign_end))
-    const totalSpan = maxYear - minYear
-  
-    return (
-      <div style={{ marginTop: 8 }}>
-        <div style={{
-  fontSize: 10, color: '#a08050', marginBottom: 4,
-  textTransform: 'uppercase', letterSpacing: 1
-}}>
-  {currentRuler.dynasty} ({minYear}–{maxYear})
-</div>
-  
-        {/* Timeline bar */}
-        <div style={{
-          position: 'relative', height: 20,
-          background: '#e8d8b0', borderRadius: 4,
-          overflow: 'hidden'
-        }}>
-          {dynastyRulers.map(ruler => {
-            const start = ruler.reign_start
-            const end = ruler.reign_end
-            const left = ((start - minYear) / totalSpan) * 100
-            const width = ((end - start) / totalSpan) * 100
-            const isCurrent = ruler.id === currentRuler.id
-            const isDisputed = ruler.status === 'disputed'
-  
-            return (
-              <div
-                key={ruler.id}
-                title={`${ruler.name} (${ruler.reign_start}–${ruler.reign_end})`}
-                style={{
-                  position: 'absolute',
-                  left: `${left}%`,
-                  width: `${width}%`,
-                  height: '100%',
-                  background: isCurrent
-                    ? entityColor
-                    : isDisputed
-                    ? '#c8a96e'
-                    : `${entityColor}66`,
-                  borderRight: '1px solid #fff',
-                  boxSizing: 'border-box',
-                  cursor: 'default'
-                }}
-              />
-            )
-          })}
-        </div>
-  
-        {/* Dynasty year range */}
-        <div style={{
-          display: 'flex', justifyContent: 'space-between',
-          fontSize: 9, color: '#a08050', marginTop: 2
-        }}>
-          <span>{minYear}</span>
-          <span>{Math.round((minYear + maxYear) / 2)}</span>
-          <span>{maxYear}</span>
-        </div>
+  if (!rulers || rulers.length === 0 || !currentRuler) return null
+
+  const dynastyRulers = rulers.filter(r => r.dynasty === currentRuler.dynasty)
+  if (dynastyRulers.length === 0) return null
+
+  const minYear = Math.min(...dynastyRulers.map(r => r.reign_start))
+  const maxYear = Math.max(...dynastyRulers.map(r => r.reign_end))
+  const totalSpan = maxYear - minYear
+
+  return (
+    <div style={{ marginTop: 8 }}>
+      <div style={{
+        fontSize: 10, color: '#a08050', marginBottom: 4,
+        textTransform: 'uppercase', letterSpacing: 1,
+        fontFamily: "'Cinzel', serif"
+      }}>
+        {currentRuler.dynasty} ({minYear}–{maxYear})
       </div>
-    )
-  }
+
+      <div style={{
+        position: 'relative', height: 20,
+        background: '#e8d8b0', borderRadius: 4,
+        overflow: 'hidden'
+      }}>
+        {dynastyRulers.map(ruler => {
+          const start = ruler.reign_start
+          const end = ruler.reign_end
+          const left = ((start - minYear) / totalSpan) * 100
+          const width = ((end - start) / totalSpan) * 100
+          const isCurrent = ruler.id === currentRuler.id
+          const isDisputed = ruler.status === 'disputed'
+
+          return (
+            <div
+              key={ruler.id}
+              title={`${ruler.name} (${ruler.reign_start}–${ruler.reign_end})`}
+              style={{
+                position: 'absolute',
+                left: `${left}%`,
+                width: `${width}%`,
+                height: '100%',
+                background: isCurrent
+                  ? entityColor
+                  : isDisputed
+                  ? '#c8a96e'
+                  : `${entityColor}66`,
+                borderRight: '1px solid #fff',
+                boxSizing: 'border-box',
+                cursor: 'default'
+              }}
+            />
+          )
+        })}
+      </div>
+
+      <div style={{
+        display: 'flex', justifyContent: 'space-between',
+        fontSize: 9, color: '#a08050', marginTop: 2,
+        fontFamily: 'Georgia, serif'
+      }}>
+        <span>{minYear}</span>
+        <span>{Math.round((minYear + maxYear) / 2)}</span>
+        <span>{maxYear}</span>
+      </div>
+    </div>
+  )
+}
 
 function useEntityRulers(entityId) {
   const [rulers, setRulers] = useState([])
@@ -144,7 +142,8 @@ export default function DetailsPanel({ selectedEvent, currentYear }) {
       fontFamily: 'Georgia, serif',
       display: 'flex', alignItems: 'center',
       justifyContent: 'center',
-      color: '#a08050', fontSize: 13, zIndex: 15
+      color: '#a08050', fontSize: 13, zIndex: 15,
+      letterSpacing: 1
     }}>
       Click a marker on the map to explore history
     </div>
@@ -177,7 +176,12 @@ export default function DetailsPanel({ selectedEvent, currentYear }) {
             width: 10, height: 10, borderRadius: '50%',
             background: entityColor, flexShrink: 0
           }} />
-          <span style={{ fontSize: 11, color: '#a08050' }}>{entityName}</span>
+          <span style={{
+            fontSize: 11, color: '#a08050',
+            fontFamily: "'Cinzel', serif", letterSpacing: 0.5
+          }}>
+            {entityName}
+          </span>
         </div>
 
         {/* Ruler info */}
@@ -187,21 +191,27 @@ export default function DetailsPanel({ selectedEvent, currentYear }) {
             padding: '8px 12px', marginBottom: 8,
             borderLeft: `3px solid ${entityColor}`
           }}>
-            <div style={{ fontSize: 10, color: '#a08050', marginBottom: 2 }}>
+            <div style={{
+              fontSize: 10, color: '#a08050', marginBottom: 2,
+              fontFamily: "'Cinzel', serif", letterSpacing: 0.5,
+              textTransform: 'uppercase'
+            }}>
               Current Ruler
             </div>
             <div style={{
-              fontSize: 14, fontWeight: 'bold', color: '#2a1a0a'
+              fontSize: 14, fontWeight: 'bold', color: '#2a1a0a',
+              fontFamily: "'Cinzel', serif"
             }}>
               {ruler.name}
             </div>
-            <div style={{ fontSize: 11, color: '#7a6040' }}>
+            <div style={{ fontSize: 11, color: '#7a6040', fontFamily: 'Georgia, serif' }}>
               {ruler.title} · {ruler.reign_start}–{ruler.reign_end}
             </div>
             {ruler.dynasty && (
               <div style={{
                 fontSize: 11, color: entityColor,
-                marginTop: 2, fontStyle: 'italic'
+                marginTop: 2, fontStyle: 'italic',
+                fontFamily: 'Georgia, serif'
               }}>
                 {ruler.dynasty}
               </div>
@@ -209,7 +219,6 @@ export default function DetailsPanel({ selectedEvent, currentYear }) {
           </div>
         )}
 
-        {/* Dynastic timeline */}
         <DynasticTimeline
           rulers={allRulers}
           currentRuler={ruler}
@@ -229,23 +238,31 @@ export default function DetailsPanel({ selectedEvent, currentYear }) {
           display: 'flex', alignItems: 'center',
           gap: 8, marginBottom: 4
         }}>
-          <span style={{ fontSize: 11, color: '#a08050' }}>
+          <span style={{
+            fontSize: 11, color: '#a08050',
+            fontFamily: "'Cinzel', serif", letterSpacing: 0.5
+          }}>
             {selectedEvent.category}
           </span>
           <span style={{
             background: st.bg, color: st.color,
-            borderRadius: 4, padding: '1px 6px', fontSize: 10
+            borderRadius: 4, padding: '1px 6px', fontSize: 10,
+            fontFamily: 'Georgia, serif'
           }}>
             {st.label}
           </span>
         </div>
         <div style={{
           fontSize: 15, fontWeight: 'bold',
-          color: '#2a1a0a', marginBottom: 4, lineHeight: 1.3
+          color: '#2a1a0a', marginBottom: 4, lineHeight: 1.3,
+          fontFamily: "'Cinzel', serif"
         }}>
           {selectedEvent.title}
         </div>
-        <div style={{ fontSize: 12, color: '#7a6040', marginBottom: 8 }}>
+        <div style={{
+          fontSize: 12, color: '#7a6040', marginBottom: 8,
+          fontFamily: 'Georgia, serif'
+        }}>
           {selectedEvent.year}
           {selectedEvent.year_end ? ` — ${selectedEvent.year_end}` : ''}
           {' · '}{selectedEvent.location_name}
@@ -261,8 +278,9 @@ export default function DetailsPanel({ selectedEvent, currentYear }) {
       {/* Description */}
       <div style={{
         fontSize: 12, color: '#3a2a0a',
-        lineHeight: 1.6, flex: 2, minWidth: 300,
-        overflowY: 'auto', maxHeight: 230
+        lineHeight: 1.7, flex: 2, minWidth: 300,
+        overflowY: 'auto', maxHeight: 230,
+        fontFamily: "'IM Fell English', serif"
       }}>
         {selectedEvent.description}
         {selectedEvent.wikipedia_url && (
@@ -273,7 +291,8 @@ export default function DetailsPanel({ selectedEvent, currentYear }) {
               display: 'inline-block', marginTop: 8,
               fontSize: 11, color: '#8a4caf',
               textDecoration: 'none',
-              borderBottom: '1px solid #8a4caf'
+              borderBottom: '1px solid #8a4caf',
+              fontFamily: 'Georgia, serif'
             }}>
             Read more on Wikipedia →
           </a>

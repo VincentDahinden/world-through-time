@@ -46,7 +46,7 @@ function App() {
         background: '#3a2a0a', pointerEvents: 'none'
       }}>
         <span style={{
-          fontFamily: 'Georgia, serif',
+          fontFamily: 'Cinzel decorative, serif',
           fontSize: 16, fontWeight: 'bold',
           color: '#f5e6c8', letterSpacing: 2,
           textTransform: 'uppercase',
