@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import Map, { Marker, Source, Layer } from 'react-map-gl/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { supabase } from '../lib/supabase'
+import WorldSnapshot from './WorldSnapshot'
 
 const categoryIcons = {
   'Governance & Law':          '⚖️',
@@ -66,7 +67,7 @@ function clusterEvents(events, radius) {
   return clusters
 }
 
-export default function WorldMap({ currentYear, selectedCategories, selectedEntities, onEventSelect, selectedEvent, onZoomChange }) {
+export default function WorldMap({ currentYear, selectedCategories, selectedEntities, onEventSelect, selectedEvent }) {
   const [cities, setCities] = useState([])
   const [events, setEvents] = useState([])
   const [hoveredEvent, setHoveredEvent] = useState(null)
@@ -184,7 +185,7 @@ const clusterRadius = viewState.zoom < 3 ? 5 : showIndividual ? 0.3 : 4
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}>
       <Map
         {...viewState}
-        onMove={e => { setViewState(e.viewState); onZoomChange(e.viewState.zoom) }}
+        onMove={e => setViewState(e.viewState)}
         style={{ width: '100vw', height: 'calc(100vh - 410px)', marginTop: 410 }}
         mapStyle={`https://api.maptiler.com/maps/aquarelle/style.json?key=${import.meta.env.VITE_MAPTILER_API_KEY}`}
       >
@@ -371,6 +372,7 @@ const clusterRadius = viewState.zoom < 3 ? 5 : showIndividual ? 0.3 : 4
             />
           </Source>
         )}
+      <WorldSnapshot currentYear={currentYear} visible={viewState.zoom < 3} />
       </Map>
     </div>
   )
