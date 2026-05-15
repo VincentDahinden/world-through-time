@@ -5,6 +5,9 @@ import Timeline from './components/Timeline'
 import DetailsPanel from './components/DetailsPanel'
 import CategoryFilter from './components/CategoryFilter'
 import EntityFilter from './components/EntityFilter'
+import AmbientAudio from './components/AmbientAudio'
+import WorldSnapshot from './components/WorldSnapshot'
+
 
 const ALL_CATEGORIES = [
   'Governance & Law', 'Military & Conflict', 'Built Environment',
@@ -20,7 +23,8 @@ function App() {
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [selectedCategories, setSelectedCategories] = useState(ALL_CATEGORIES)
   const [selectedEntities, setSelectedEntities] = useState(ALL_ENTITIES)
-  const [yearRange, setYearRange] = useState({ min: 1400, max: 1600 })
+  const [yearRange, setYearRange] = useState({ min: 43, max: 1815 })
+  const [zoom, setZoom] = useState(2.5)
 
   useEffect(() => {
     async function fetchYearRange() {
@@ -58,12 +62,18 @@ function App() {
       </div>
 
       <WorldMap
-        currentYear={currentYear}
-        selectedCategories={selectedCategories}
-        selectedEntities={selectedEntities}
-        onEventSelect={setSelectedEvent}
-      />
-      <EntityFilter
+  currentYear={currentYear}
+  selectedCategories={selectedCategories}
+  selectedEntities={selectedEntities}
+  onEventSelect={setSelectedEvent}
+  selectedEvent={selectedEvent}
+  onZoomChange={setZoom}
+/>
+<WorldSnapshot currentYear={currentYear} visible={zoom < 3} />
+
+        <AmbientAudio currentYear={currentYear} selectedEvent={selectedEvent} />
+      
+            <EntityFilter
         selectedEntities={selectedEntities}
         onEntityChange={setSelectedEntities}
       />

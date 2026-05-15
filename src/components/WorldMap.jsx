@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import Map, { Marker } from 'react-map-gl/maplibre'
+import { useState, useEffect, useMemo } from 'react'
+import Map, { Marker, Source, Layer } from 'react-map-gl/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { supabase } from '../lib/supabase'
 
@@ -66,14 +66,38 @@ function clusterEvents(events, radius) {
   return clusters
 }
 
-export default function WorldMap({ currentYear, selectedCategories, selectedEntities, onEventSelect }) {
+export default function WorldMap({ currentYear, selectedCategories, selectedEntities, onEventSelect, selectedEvent, onZoomChange }) {
   const [cities, setCities] = useState([])
   const [events, setEvents] = useState([])
   const [hoveredEvent, setHoveredEvent] = useState(null)
-const [hoveredCluster, setHoveredCluster] = useState(null)
+  const [hoveredCluster, setHoveredCluster] = useState(null)
   const [viewState, setViewState] = useState({
     longitude: 20, latitude: 25, zoom: 2.5
   })
+  const [entityRulers, setEntityRulers] = useState([])
+
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      const { data, error } = await supabase
+        .from('rulers')
+        .select('entity_id, coat_of_arms_url, entities(territory_lat, territory_lng, name)')
+        .lte('reign_start', currentYear)
+        .gte('reign_end', currentYear)
+        .not('coat_of_arms_url', 'is', null)
+      if (error) console.error('Rulers error:', error)
+        else {
+          const unique = Object.values(
+            (data || []).reduce((acc, r) => {
+              if (!acc[r.entity_id]) acc[r.entity_id] = r
+              return acc
+            }, {})
+          )
+          console.log('entityRulers:', unique)
+          setEntityRulers(unique)
+        }
+    }, 50)
+    return () => clearTimeout(timer)
+  }, [currentYear])
 
   const fontSize = viewState.zoom < 4 ? 0 : Math.max(6, Math.min(18, (viewState.zoom - 2) * 4))
   const showIndividual = viewState.zoom >= 5
@@ -96,7 +120,7 @@ const clusterRadius = viewState.zoom < 3 ? 5 : showIndividual ? 0.3 : 4
     const timer = setTimeout(async () => {
       const { data, error } = await supabase
         .from('events')
-        .select('*, entities(name, colour)')
+        .select('*, entities!events_entity_id_fkey(name, colour)')
         .lte('year', currentYear)
         .or(`year_end.gte.${currentYear},and(year_end.is.null,year.gte.${currentYear - 3},year.lte.${currentYear})`)
         .in('category', selectedCategories.length > 0 ? selectedCategories : ['none'])
@@ -107,6 +131,50 @@ const clusterRadius = viewState.zoom < 3 ? 5 : showIndividual ? 0.3 : 4
     return () => clearTimeout(timer)
   }, [currentYear, selectedCategories, selectedEntities])
 
+  // Build arc GeoJSON when event has two coordinate pairs
+  const [arcProgress, setArcProgress] = useState(0)
+
+  useEffect(() => {
+    if (!selectedEvent?.latitude_2) return
+    setArcProgress(0)
+    let step = 0
+    const interval = setInterval(() => {
+      step += 2
+      setArcProgress(step)
+      if (step >= 100) clearInterval(interval)
+    }, 20)
+    return () => clearInterval(interval)
+  }, [selectedEvent])
+
+  const arcGeoJSON = useMemo(() => {
+    if (!selectedEvent?.latitude) return null
+    if (selectedEvent.category !== 'Military & Conflict') return null
+
+    // Use explicit origin if set, otherwise fall back to entity territory
+    const entityRuler = entityRulers.find(r => r.entity_id === selectedEvent.entity_id)
+    const originLat = selectedEvent.latitude_2 ?? entityRuler?.entities?.territory_lat
+    const originLng = selectedEvent.longitude_2 ?? entityRuler?.entities?.territory_lng
+
+    if (!originLat || !originLng) return null
+    const steps = 100
+    const coords = []
+    for (let i = 0; i <= arcProgress; i++) {
+      const t = i / steps
+      const lat = originLat + (selectedEvent.latitude - originLat) * t
+      const lng = originLng + (selectedEvent.longitude - originLng) * t
+      const curve = Math.sin(Math.PI * t) * 0.8
+      coords.push([lng, lat + curve])
+    }
+    if (coords.length < 2) return null
+    return {
+      type: 'FeatureCollection',
+      features: [{
+        type: 'Feature',
+        geometry: { type: 'LineString', coordinates: coords }
+      }]
+    }
+  }, [selectedEvent, arcProgress])
+
   const clusters = clusterEvents(
     events.filter(e => e.longitude && e.latitude),
     clusterRadius
@@ -116,7 +184,7 @@ const clusterRadius = viewState.zoom < 3 ? 5 : showIndividual ? 0.3 : 4
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}>
       <Map
         {...viewState}
-        onMove={e => setViewState(e.viewState)}
+        onMove={e => { setViewState(e.viewState); onZoomChange(e.viewState.zoom) }}
         style={{ width: '100vw', height: 'calc(100vh - 410px)', marginTop: 410 }}
         mapStyle={`https://api.maptiler.com/maps/aquarelle/style.json?key=${import.meta.env.VITE_MAPTILER_API_KEY}`}
       >
@@ -236,7 +304,33 @@ const clusterRadius = viewState.zoom < 3 ? 5 : showIndividual ? 0.3 : 4
           ))
         })}
 
-        {/* Hover tooltip */}
+{entityRulers.map(ruler => (
+          ruler.entities?.territory_lat && ruler.entities?.territory_lng && (
+            <Marker
+              key={`coa-${ruler.entity_id}`}
+              longitude={ruler.entities.territory_lng}
+              latitude={ruler.entities.territory_lat}
+            >
+              <div style={{
+                width: 23, height: 23,
+                background: 'rgba(253,246,227,0.85)',
+                border: '1px solid #c8a96e',
+                borderRadius: 4,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+                pointerEvents: 'none',
+              }}>
+                <img
+                  src={ruler.coat_of_arms_url}
+                  alt={ruler.entities.name}
+                  style={{ width: 18, height: 18, objectFit: 'contain' }}
+                />
+              </div>
+            </Marker>
+          )
+        ))}
+
+              {/* Hover tooltip */}
         {hoveredEvent && (
           <Marker longitude={hoveredEvent.longitude} latitude={hoveredEvent.latitude}>
             <div style={{
@@ -262,6 +356,20 @@ const clusterRadius = viewState.zoom < 3 ? 5 : showIndividual ? 0.3 : 4
               </div>
             </div>
           </Marker>
+        )}
+      {arcGeoJSON && (
+          <Source id="arc" type="geojson" data={arcGeoJSON}>
+            <Layer
+              id="arc-line"
+              type="line"
+              paint={{
+                'line-color': '#9B1B30',
+                'line-width': 2,
+                'line-dasharray': [2, 1],
+                'line-opacity': 0.8,
+              }}
+            />
+          </Source>
         )}
       </Map>
     </div>
