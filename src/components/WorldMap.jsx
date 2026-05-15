@@ -81,7 +81,7 @@ export default function WorldMap({ currentYear, selectedCategories, selectedEnti
     const timer = setTimeout(async () => {
       const { data, error } = await supabase
         .from('rulers')
-        .select('entity_id, coat_of_arms_url, entities(territory_lat, territory_lng, name)')
+        .select('entity_id, name, reign_start, reign_end, coat_of_arms_url, entities(territory_lat, territory_lng, name)')
         .lte('reign_start', currentYear)
         .gte('reign_end', currentYear)
         .not('coat_of_arms_url', 'is', null)
@@ -305,7 +305,7 @@ const clusterRadius = viewState.zoom < 3 ? 5 : showIndividual ? 0.3 : 4
           ))
         })}
 
-{entityRulers.map(ruler => (
+{viewState.zoom > 3 && entityRulers.map(ruler => (
           ruler.entities?.territory_lat && ruler.entities?.territory_lng && (
             <Marker
               key={`coa-${ruler.entity_id}`}
@@ -313,19 +313,30 @@ const clusterRadius = viewState.zoom < 3 ? 5 : showIndividual ? 0.3 : 4
               latitude={ruler.entities.territory_lat}
             >
               <div style={{
-                width: 23, height: 23,
-                background: 'rgba(253,246,227,0.85)',
+                background: 'rgba(253,246,227,0.92)',
                 border: '1px solid #c8a96e',
-                borderRadius: 4,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                borderRadius: 6,
+                padding: '4px 8px',
+                display: 'flex', alignItems: 'center', gap: 6,
                 boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
                 pointerEvents: 'none',
+                fontFamily: "'Cinzel', serif",
               }}>
-                <img
-                  src={ruler.coat_of_arms_url}
-                  alt={ruler.entities.name}
-                  style={{ width: 18, height: 18, objectFit: 'contain' }}
-                />
+                {ruler.coat_of_arms_url && (
+                  <img
+                    src={ruler.coat_of_arms_url}
+                    alt={ruler.entities.name}
+                    style={{ width: 20, height: 20, objectFit: 'contain', flexShrink: 0 }}
+                  />
+                )}
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 'bold', color: '#3a2a0a', whiteSpace: 'nowrap' }}>
+                    {ruler.name}
+                  </div>
+                  <div style={{ fontSize: 9, color: '#7a6040', fontFamily: 'Georgia, serif', whiteSpace: 'nowrap' }}>
+                    {ruler.reign_start}–{ruler.reign_end}
+                  </div>
+                </div>
               </div>
             </Marker>
           )
