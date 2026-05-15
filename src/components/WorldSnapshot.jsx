@@ -114,7 +114,7 @@ export default function WorldSnapshot({ currentYear, visible }) {
                   background: entityColors[entity.id] || '#999',
                   flexShrink: 0,
                 }} />
-                <span style={{ fontSize: 10, color: entityColors[entity.id] || '#999', fontWeight: 'bold', letterSpacing: 0.5 }}>
+                <span style={{ fontSize: 20, color: entityColors[entity.id] || '#999', fontWeight: 'bold', letterSpacing: 0.5 }}>
                   {entity.name}
                 </span>
               </div>
@@ -128,8 +128,8 @@ export default function WorldSnapshot({ currentYear, visible }) {
                   <img src={ruler.portrait_url} alt={ruler.name} style={{ width: 24, height: 24, objectFit: 'cover', objectPosition: 'top', borderRadius: '50%', border: `1px solid ${gold}` }} />
                 )}
                 <div>
-                  <div style={{ fontSize: 11, color: dark, fontWeight: 'bold' }}>{ruler.name}</div>
-                  <div style={{ fontSize: 18, color: mid, fontFamily: 'Georgia, serif' }}>{ruler.title} · {ruler.dynasty}</div>
+                  <div style={{ fontSize: 20, color: dark, fontWeight: 'bold' }}>{ruler.name}</div>
+                  <div style={{ fontSize: 17, color: mid, fontFamily: 'Georgia, serif' }}>{ruler.title} · {ruler.dynasty}</div>
                 </div>
               </div>
 
