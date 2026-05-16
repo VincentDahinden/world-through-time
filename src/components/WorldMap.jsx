@@ -123,7 +123,7 @@ const clusterRadius = viewState.zoom < 3 ? 5 : showIndividual ? 0.3 : 4
         .from('events')
         .select('*, entities!events_entity_id_fkey(name, colour)')
         .lte('year', currentYear)
-        .or(`year_end.gte.${currentYear},and(year_end.is.null,year.gte.${currentYear - 3},year.lte.${currentYear})`)
+        .or(`year_end.gte.${currentYear},and(year_end.is.null,year.gte.${currentYear - 1},year.lte.${currentYear})`)
         .in('category', selectedCategories.length > 0 ? selectedCategories : ['none'])
         .in('entity_id', selectedEntities.length > 0 ? selectedEntities : [0])
       if (error) console.error('Events error:', error)
