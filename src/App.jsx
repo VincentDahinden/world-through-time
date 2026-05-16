@@ -82,9 +82,11 @@ function App() {
         maxYear={yearRange.max}
       />
       <DetailsPanel
-        selectedEvent={selectedEvent}
-        currentYear={currentYear}
-      />
+  selectedEvent={selectedEvent}
+  currentYear={currentYear}
+  onYearChange={setCurrentYear}
+  onEventSelect={setSelectedEvent}
+/>
       <CategoryFilter
         selectedCategories={selectedCategories}
         onCategoryChange={setSelectedCategories}
