@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
+import NotableFigures from './NotableFigures'
 
 const statusConfig = {
   confirmed: { label: 'Confirmed', color: '#2e7d32', bg: '#e8f5e9' },
@@ -230,6 +231,7 @@ export default function DetailsPanel({ selectedEvent, currentYear }) {
             </div>
           )}
           <DynasticTimeline rulers={allRulers} currentRuler={ruler} entityColor={entityColor} />
+          <NotableFigures currentYear={currentYear} entityId={selectedEvent?.entity_id} />
         </div>
 
         {ruler?.portrait_url && (

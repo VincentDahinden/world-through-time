@@ -76,7 +76,7 @@ export default function WorldMap({ currentYear, selectedCategories, selectedEnti
     longitude: 20, latitude: 25, zoom: 2.5
   })
   const [entityRulers, setEntityRulers] = useState([])
-
+ 
   useEffect(() => {
     const timer = setTimeout(async () => {
       const { data, error } = await supabase
@@ -84,7 +84,7 @@ export default function WorldMap({ currentYear, selectedCategories, selectedEnti
         .select('entity_id, name, reign_start, reign_end, coat_of_arms_url, entities(territory_lat, territory_lng, name)')
         .lte('reign_start', currentYear)
         .gte('reign_end', currentYear)
-        .not('coat_of_arms_url', 'is', null)
+        .not('entity_id', 'is', null)
       if (error) console.error('Rulers error:', error)
         else {
           const unique = Object.values(
@@ -305,6 +305,7 @@ const clusterRadius = viewState.zoom < 3 ? 5 : showIndividual ? 0.3 : 4
           ))
         })}
 
+    
 {viewState.zoom > 3 && entityRulers.map(ruler => (
           ruler.entities?.territory_lat && ruler.entities?.territory_lng && (
             <Marker
