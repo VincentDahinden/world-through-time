@@ -1,11 +1,16 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import NotableFigures from './NotableFigures'
+import FamilyPanel from './FamilyPanel'
 
 // ── Constants ────────────────────────────────────────────────────────────
 const STRIP_HEIGHT   = 310
 const PADDING        = 10
-const CONTENT_HEIGHT = STRIP_HEIGHT - PADDING * 2  // 290px
+const PORTRAIT_H     = 200
+const DYNASTY_HEIGHT = 44
+const DYNASTY_BOTTOM = 8
+const DYNASTY_WIDTH  = 390
+const CONTENT_TOP_H  = STRIP_HEIGHT - PADDING - DYNASTY_HEIGHT - DYNASTY_BOTTOM - 12
 
 const statusConfig = {
   confirmed: { label: 'Confirmed', color: '#2e7d32', bg: '#e8f5e9' },
@@ -39,25 +44,9 @@ const entities = [
   { id: 10, name: 'Anglo-Saxon England',      short: 'Anglo-Saxon',  colour: '#B8860B' },
 ]
 
-// ── Shared column style ───────────────────────────────────────────────────
-const colStyle = (width, extra = {}) => ({
-  flexShrink: 0,
-  width,
-  height: CONTENT_HEIGHT,
-  overflowY: 'auto',
-  boxSizing: 'border-box',
-  ...extra,
-})
-
 const dividerStyle = {
   width: 1, background: '#e8d8b0',
   alignSelf: 'stretch', flexShrink: 0,
-}
-
-const colHeaderStyle = {
-  fontSize: 9, color: '#a08050',
-  textTransform: 'uppercase', letterSpacing: 1,
-  fontFamily: "'Cinzel', serif", marginBottom: 6,
 }
 
 // ── Dynastic timeline bar ────────────────────────────────────────────────
@@ -100,7 +89,10 @@ function useEntityRulers(entityId) {
   const [rulers, setRulers] = useState([])
   useEffect(() => {
     if (!entityId) return
-    supabase.from('rulers').select('*').eq('entity_id', entityId)
+    supabase.from('rulers')
+      .select('id, name, reign_start, reign_end, dynasty, status, entity_id')
+      .eq('entity_id', entityId)
+      .eq('is_ruler', true)
       .order('reign_start', { ascending: true })
       .then(({ data }) => setRulers(data || []))
   }, [entityId])
@@ -111,27 +103,59 @@ function useCurrentRuler(entityId, currentYear) {
   const [ruler, setRuler] = useState(null)
   useEffect(() => {
     if (!entityId || !currentYear) return
-    supabase.from('rulers').select('*, entities(name)')
+    supabase.from('rulers')
+      .select('*, entities!rulers_entity_id_fkey(name)')
       .eq('entity_id', entityId)
+      .eq('is_ruler', true)
       .lte('reign_start', currentYear)
       .gte('reign_end', currentYear)
+      .order('reign_start', { ascending: false })
       .limit(1).single()
       .then(({ data }) => setRuler(data))
   }, [entityId, currentYear])
   return ruler
 }
 
-// ── RulerPanel — 5-column horizontal strip ───────────────────────────────
-export default function RulerPanel({ activeEntityId, currentYear, onYearChange, selectedEntities, onEntityChange }) {
-  const ruler     = useCurrentRuler(activeEntityId, currentYear)
-  const allRulers = useEntityRulers(activeEntityId)
+// ── Direct prev/next ruler queries — reliable regardless of array state ──
+function useAdjacentRulers(ruler, entityId) {
+  const [prevRuler, setPrevRuler] = useState(null)
+  const [nextRuler, setNextRuler] = useState(null)
 
-  const currentIndex = allRulers.findIndex(r => r.id === ruler?.id)
-  const prevRuler    = currentIndex > 0 ? allRulers[currentIndex - 1] : null
-  const nextRuler    = currentIndex < allRulers.length - 1 ? allRulers[currentIndex + 1] : null
+  useEffect(() => {
+    if (!ruler || !entityId) { setPrevRuler(null); setNextRuler(null); return }
+
+    supabase.from('rulers')
+      .select('id, name, reign_start, reign_end')
+      .eq('entity_id', entityId)
+      .eq('is_ruler', true)
+      .lt('reign_start', ruler.reign_start)
+      .order('reign_start', { ascending: false })
+      .limit(1).single()
+      .then(({ data }) => setPrevRuler(data || null))
+
+    supabase.from('rulers')
+      .select('id, name, reign_start, reign_end')
+      .eq('entity_id', entityId)
+      .eq('is_ruler', true)
+      .gt('reign_start', ruler.reign_start)
+      .order('reign_start', { ascending: true })
+      .limit(1).single()
+      .then(({ data }) => setNextRuler(data || null))
+
+  }, [ruler?.id, entityId])
+
+  return { prevRuler, nextRuler }
+}
+
+// ── RulerPanel ───────────────────────────────────────────────────────────
+export default function RulerPanel({ activeEntityId, currentYear, onYearChange, selectedEntities, onEntityChange }) {
+  const ruler               = useCurrentRuler(activeEntityId, currentYear)
+  const allRulers           = useEntityRulers(activeEntityId)
+  const { prevRuler, nextRuler } = useAdjacentRulers(ruler, activeEntityId)
 
   const entityName  = ruler?.entities?.name || ''
   const entityColor = entityColors[entityName] || '#999'
+  const [deathPopup, setDeathPopup] = useState(false)
 
   const allSelected = selectedEntities.length === entities.length
   const toggleEntity = (id) => {
@@ -147,13 +171,6 @@ export default function RulerPanel({ activeEntityId, currentYear, onYearChange, 
     fontFamily: "'Cinzel', serif", marginBottom: 8,
   }
 
-  const DYNASTY_HEIGHT = 44
-  const DYNASTY_BOTTOM = 8
-  const DYNASTY_WIDTH  = 380
-  const CONTENT_TOP_H  = STRIP_HEIGHT - PADDING - DYNASTY_HEIGHT - DYNASTY_BOTTOM - 12
-
-  // outer strip — position: fixed
-  // inner wrapper — position: relative (anchors the absolute dynasty bar)
   return (
     <div style={{
       position: 'fixed', top: 35, left: 0, right: 0,
@@ -162,38 +179,13 @@ export default function RulerPanel({ activeEntityId, currentYear, onYearChange, 
       borderBottom: '2px solid #c8a96e',
       zIndex: 15, boxSizing: 'border-box',
     }}>
-
       <div style={{ position: 'relative', width: '100%', height: '100%' }}>
 
         {/* Decorative inner border */}
-        <div style={{
-          position: 'absolute', top: 4, left: 4, right: 4, bottom: 4,
-          border: '1px solid #8b6914', pointerEvents: 'none', zIndex: 14,
-        }} />
-
-        {/* Dynasty bar — fixed position independent of strip */}
-        {ruler && (
-          <div style={{
-            position: 'fixed',
-            top: 35 + STRIP_HEIGHT - 52,
-            left: 16,
-            width: 380,
-            zIndex: 9999,
-            background: 'red',
-            height: 44,
-          }}>
-            <DynasticTimeline rulers={allRulers} currentRuler={ruler} entityColor={entityColor} />
-          </div>
-        )}
+        <div style={{ position: 'absolute', top: 4, left: 4, right: 4, bottom: 4, border: '1px solid #8b6914', pointerEvents: 'none', zIndex: 14 }} />
 
         {/* Main content row */}
-        <div style={{
-          display: 'flex',
-          padding: `${PADDING}px 16px 0 16px`,
-          height: CONTENT_TOP_H,
-          boxSizing: 'border-box',
-          overflow: 'hidden',
-        }}>
+        <div style={{ display: 'flex', padding: `${PADDING}px 16px 0 16px`, height: CONTENT_TOP_H, boxSizing: 'border-box', overflow: 'hidden' }}>
 
           {/* ── SECTION 1: Ruler info + portrait ── */}
           <div style={{ flex: 1, display: 'flex', gap: 10, overflow: 'hidden', paddingRight: 12 }}>
@@ -216,21 +208,31 @@ export default function RulerPanel({ activeEntityId, currentYear, onYearChange, 
                         style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0 }} />
                     )}
                     <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <button onClick={() => { if (prevRuler) onYearChange(prevRuler.reign_start + 1) }}
-                          disabled={!prevRuler} title={prevRuler?.name}
-                          style={{ background: 'transparent', border: 'none', color: prevRuler ? '#3a2a0a' : '#e8d8b0', fontSize: 18, cursor: prevRuler ? 'pointer' : 'default', padding: 0, lineHeight: 1, flexShrink: 0 }}>‹</button>
-                        <div style={{ fontSize: 16, fontWeight: 'bold', color: '#2a1a0a', fontFamily: "'Cinzel', serif", flex: 1, lineHeight: 1.2 }}>{ruler.name}</div>
-                        <button onClick={() => { if (nextRuler) onYearChange(nextRuler.reign_start + 1) }}
-                          disabled={!nextRuler} title={nextRuler?.name}
-                          style={{ background: 'transparent', border: 'none', color: nextRuler ? '#3a2a0a' : '#e8d8b0', fontSize: 18, cursor: nextRuler ? 'pointer' : 'default', padding: 0, lineHeight: 1, flexShrink: 0 }}>›</button>
+                      {/* Ruler name — centred with equal-width arrow columns */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '28px 1fr 28px', alignItems: 'center', marginBottom: 4 }}>
+                        <button
+                          onClick={() => { if (prevRuler) onYearChange(prevRuler.reign_start + 1) }}
+                          disabled={!prevRuler}
+                          title={prevRuler?.name}
+                          style={{ background: 'transparent', border: 'none', color: prevRuler ? '#3a2a0a' : '#e8d8b0', fontSize: 18, cursor: prevRuler ? 'pointer' : 'default', padding: 0, lineHeight: 1 }}>‹</button>
+                        <div style={{ fontSize: 16, fontWeight: 'bold', color: '#2a1a0a', fontFamily: "'Cinzel', serif", textAlign: 'center', lineHeight: 1.2 }}>
+                          {ruler.name}
+                        </div>
+                        <button
+                          onClick={() => { if (nextRuler) onYearChange(nextRuler.reign_start + 1) }}
+                          disabled={!nextRuler}
+                          title={nextRuler?.name}
+                          style={{ background: 'transparent', border: 'none', color: nextRuler ? '#3a2a0a' : '#e8d8b0', fontSize: 18, cursor: nextRuler ? 'pointer' : 'default', padding: 0, lineHeight: 1, justifySelf: 'end' }}>›</button>
                       </div>
-                      <div style={{ fontSize: 13, color: '#7a6040', fontFamily: 'Georgia, serif', marginTop: 3 }}>
+                      <div style={{ fontSize: 13, color: '#7a6040', fontFamily: 'Georgia, serif', textAlign: 'center' }}>
                         {ruler.title} · {ruler.reign_start}–{ruler.reign_end}
                       </div>
                       {ruler.dynasty && (
-                        <div style={{ fontSize: 13, color: entityColor, marginTop: 3, fontStyle: 'italic', fontFamily: 'Georgia, serif' }}>{ruler.dynasty}</div>
+                        <div style={{ fontSize: 13, color: entityColor, marginTop: 3, fontStyle: 'italic', fontFamily: 'Georgia, serif', textAlign: 'center' }}>{ruler.dynasty}</div>
                       )}
+                      <div style={{ marginTop: 6 }}>
+                        <FamilyPanel rulerId={ruler.id} rulerName={ruler.name} onYearChange={onYearChange} />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -241,14 +243,33 @@ export default function RulerPanel({ activeEntityId, currentYear, onYearChange, 
               )}
             </div>
 
-            {/* Portrait */}
-            <div style={{ flexShrink: 0, width: 100, height: 200, overflow: 'hidden', borderRadius: 4, background: '#e8d8b0' }}>
+            {/* Portrait — fixed height, with death overlay */}
+            <div style={{ flexShrink: 0, width: 100, height: PORTRAIT_H, overflow: 'hidden', borderRadius: 4, background: '#e8d8b0', position: 'relative' }}>
               {ruler?.portrait_url ? (
                 <img src={ruler.portrait_url} alt={ruler?.name}
                   style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', display: 'block', filter: 'sepia(20%)' }} />
               ) : (
                 <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <span style={{ fontSize: 28, opacity: 0.3 }}>👑</span>
+                </div>
+              )}
+              {ruler?.death_notes && (
+                <div onClick={() => setDeathPopup(d => !d)}
+                  style={{ position: 'absolute', top: 4, right: 4, width: 22, height: 22, background: 'rgba(58,42,10,0.85)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 12, color: '#c8a96e', boxShadow: '0 1px 4px rgba(0,0,0,0.4)', zIndex: 10 }}
+                  title="Cause of death">✝</div>
+              )}
+              {deathPopup && ruler?.death_notes && (
+                <div style={{ position: 'fixed', top: 420, left: 120, width: 300, background: '#fdf6e3', border: '2px solid #c8a96e', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.3)', zIndex: 9999, fontFamily: "'Cinzel', serif", overflow: 'hidden' }}>
+                  <div style={{ background: '#3a2a0a', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontSize: 9, color: '#c8a96e', textTransform: 'uppercase', letterSpacing: 2 }}>Cause of Death</div>
+                      <div style={{ fontSize: 13, color: '#f5e6c8', fontWeight: 'bold' }}>✝ {ruler.name}</div>
+                    </div>
+                    <button onClick={() => setDeathPopup(false)} style={{ background: 'transparent', border: 'none', color: '#c8a96e', fontSize: 16, cursor: 'pointer', lineHeight: 1 }}>✕</button>
+                  </div>
+                  <div style={{ padding: '12px 14px', fontSize: 13, color: '#3a2a0a', lineHeight: 1.75, fontFamily: "'IM Fell English', serif", fontStyle: 'italic' }}>
+                    {ruler.death_notes}
+                  </div>
                 </div>
               )}
             </div>
@@ -261,11 +282,11 @@ export default function RulerPanel({ activeEntityId, currentYear, onYearChange, 
           <div style={{ flex: 1, overflowY: 'auto', padding: '0 14px' }}>
             <div style={sectionHeader}>Biography</div>
             {ruler?.biography ? (
-              <div style={{ fontSize: 13, color: '#3a2a0a', lineHeight: 1.75, fontFamily: "'IM Fell English', serif", fontStyle: 'italic' }}>
+              <div style={{ fontSize: 15, color: '#3a2a0a', lineHeight: 1.75, fontFamily: "'IM Fell English', serif", fontStyle: 'italic' }}>
                 {ruler.biography}
               </div>
             ) : (
-              <div style={{ fontSize: 13, color: '#a08050', fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
+              <div style={{ fontSize: 14, color: '#a08050', fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
                 No biography recorded.
               </div>
             )}
@@ -285,13 +306,8 @@ export default function RulerPanel({ activeEntityId, currentYear, onYearChange, 
           <div style={{ flexShrink: 0, width: 200, overflowY: 'auto', padding: '0 10px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <div style={{ ...sectionHeader, fontSize: 13 }}>Civilisations</div>
-              <button
-                onClick={() => onEntityChange(allSelected ? [] : entities.map(e => e.id))}
-                style={{
-                  background: 'transparent', border: '1px solid #c8a96e',
-                  borderRadius: 3, padding: '2px 6px', cursor: 'pointer',
-                  fontSize: 9, color: '#3a2a0a', fontFamily: 'Georgia, serif', fontWeight: 'bold',
-                }}>
+              <button onClick={() => onEntityChange(allSelected ? [] : entities.map(e => e.id))}
+                style={{ background: 'transparent', border: '1px solid #c8a96e', borderRadius: 3, padding: '2px 6px', cursor: 'pointer', fontSize: 9, color: '#3a2a0a', fontFamily: 'Georgia, serif', fontWeight: 'bold' }}>
                 {allSelected ? 'None' : 'All'}
               </button>
             </div>
@@ -300,13 +316,7 @@ export default function RulerPanel({ activeEntityId, currentYear, onYearChange, 
                 const active = selectedEntities.includes(entity.id)
                 return (
                   <button key={entity.id} onClick={() => toggleEntity(entity.id)}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 6,
-                      background: active ? `${entity.colour}22` : 'transparent',
-                      border: `1px solid ${active ? entity.colour : '#e8d8b0'}`,
-                      borderRadius: 4, padding: '4px 8px', cursor: 'pointer',
-                      textAlign: 'left', width: '100%',
-                    }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, background: active ? `${entity.colour}22` : 'transparent', border: `1px solid ${active ? entity.colour : '#e8d8b0'}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', textAlign: 'left', width: '100%' }}>
                     <div style={{ width: 8, height: 8, borderRadius: '50%', background: entity.colour, flexShrink: 0, opacity: active ? 1 : 0.35 }} />
                     <span style={{ fontSize: 12, fontFamily: 'Georgia, serif', color: active ? '#2a1a0a' : '#a08050', fontWeight: active ? 'bold' : 'normal' }}>
                       {entity.short}
@@ -319,13 +329,12 @@ export default function RulerPanel({ activeEntityId, currentYear, onYearChange, 
 
         </div>{/* end main content row */}
 
-      </div>{/* end position: relative wrapper */}
-
-    </div>// end fixed strip
+      </div>{/* end relative wrapper */}
+    </div>
   )
 }
 
-// ── DynasticBar — rendered independently in App.jsx ─────────────────────
+// ── DynasticBar — rendered independently from App.jsx ────────────────────
 export function DynasticBar({ activeEntityId, currentYear }) {
   const ruler     = useCurrentRuler(activeEntityId, currentYear)
   const allRulers = useEntityRulers(activeEntityId)
@@ -333,22 +342,13 @@ export function DynasticBar({ activeEntityId, currentYear }) {
   const entityColor = entityColors[entityName] || '#999'
   if (!ruler) return null
   return (
-    <div style={{
-      position: 'fixed',
-      top: 35 + 310 - 110,
-      left: 16,
-      width: 390,
-      zIndex: 9999,
-    }}>
+    <div style={{ position: 'fixed', top: 35 + STRIP_HEIGHT - 110, left: 16, width: DYNASTY_WIDTH, zIndex: 9999, background: '#fdf6e3' }}>
       <DynasticTimeline rulers={allRulers} currentRuler={ruler} entityColor={entityColor} />
     </div>
   )
 }
 
-// ── DynasticBar — fixed position, rendered from App.jsx ─────────────────
-
-
-// ── EventPopup — floating on map when event clicked ──────────────────────
+// ── EventPopup ───────────────────────────────────────────────────────────
 export function EventPopup({ selectedEvent, onClose }) {
   const [narrating, setNarrating] = useState(false)
   const utteranceRef = useRef(null)
@@ -357,7 +357,6 @@ export function EventPopup({ selectedEvent, onClose }) {
     if (!selectedEvent?.description) return
     window.speechSynthesis.cancel()
     setNarrating(false)
-
     const utterance  = new SpeechSynthesisUtterance(selectedEvent.description)
     utterance.rate   = 0.9
     utterance.pitch  = 1
@@ -365,7 +364,6 @@ export function EventPopup({ selectedEvent, onClose }) {
     const voices     = window.speechSynthesis.getVoices()
     const preferred  = voices.find(v => v.name.includes('Daniel') || v.name.includes('Google UK English Male') || v.name.includes('Arthur'))
     if (preferred) utterance.voice = preferred
-
     utterance.onstart = () => { setNarrating(true);  window.dispatchEvent(new CustomEvent('narration', { detail: { active: true } })) }
     utterance.onend   = () => { setNarrating(false); window.dispatchEvent(new CustomEvent('narration', { detail: { active: false } })) }
     utteranceRef.current = utterance
@@ -384,21 +382,12 @@ export function EventPopup({ selectedEvent, onClose }) {
   }
 
   if (!selectedEvent) return null
-
   const st          = statusConfig[selectedEvent.status] || statusConfig.confirmed
   const entityName  = selectedEvent.entities?.name
   const entityColor = entityColors[entityName] || '#999'
 
   return (
-    <div style={{
-      position: 'fixed', top: 450, left: 20, width: 380,
-      maxHeight: 'calc(100vh - 460px)',
-      background: '#fdf6e3', border: `2px solid ${entityColor}`,
-      borderRadius: 10, boxShadow: '0 4px 24px rgba(0,0,0,0.35)',
-      zIndex: 50, display: 'flex', flexDirection: 'column',
-      fontFamily: "'Cinzel', serif", overflow: 'hidden',
-    }}>
-      {/* Header */}
+    <div style={{ position: 'fixed', top: 450, left: 20, width: 380, maxHeight: 'calc(100vh - 460px)', background: '#fdf6e3', border: `2px solid ${entityColor}`, borderRadius: 10, boxShadow: '0 4px 24px rgba(0,0,0,0.35)', zIndex: 50, display: 'flex', flexDirection: 'column', fontFamily: "'Cinzel', serif", overflow: 'hidden' }}>
       <div style={{ background: entityColor, padding: '10px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexShrink: 0 }}>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
@@ -415,11 +404,9 @@ export function EventPopup({ selectedEvent, onClose }) {
             style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer', lineHeight: 1, padding: 0 }}>
             {narrating ? '🔇' : '🔊'}
           </button>
-          <button onClick={onClose}
-            style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', lineHeight: 1, padding: 0 }}>✕</button>
+          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', lineHeight: 1, padding: 0 }}>✕</button>
         </div>
       </div>
-      {/* Body */}
       <div style={{ padding: '12px 14px', overflowY: 'auto', flex: 1 }}>
         {selectedEvent.image_url && (
           <img src={selectedEvent.image_url} alt={selectedEvent.title}
