@@ -337,7 +337,7 @@ export function DynasticBar({ activeEntityId, currentYear }) {
       position: 'fixed',
       top: 35 + 310 - 110,
       left: 16,
-      width: 410,
+      width: 390,
       zIndex: 9999,
     }}>
       <DynasticTimeline rulers={allRulers} currentRuler={ruler} entityColor={entityColor} />
