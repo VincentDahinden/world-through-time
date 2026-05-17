@@ -8,21 +8,23 @@ function dynastyToFilename(dynasty) {
     .replace(/[^a-z0-9-]/g, '') + '.mp3'
 }
 
-const FADE_MS = 2500
+const FADE_MS    = 2500
 const FADE_STEPS = 50
 
-export default function AmbientAudio({ currentYear, selectedEvent }) {
+export default function AmbientAudio({ currentYear, activeEntityId }) {
   const [enabled, setEnabled]         = useState(false)
   const [volume, setVolume]           = useState(0.35)
   const [expanded, setExpanded]       = useState(false)
   const [activeTrack, setActiveTrack] = useState(null)
   const [isLoading, setIsLoading]     = useState(false)
 
-  const audioA      = useRef(null)
-  const audioB      = useRef(null)
-  const currentSlot = useRef('A')
-  const activeFile  = useRef(null)
-  const fadeTimer   = useRef(null)
+  const audioA       = useRef(null)
+  const audioB       = useRef(null)
+  const currentSlot  = useRef('A')
+  const activeFile   = useRef(null)
+  const activeDynasty = useRef(null)
+  const [replayTrigger, setReplayTrigger] = useState(0)
+  const fadeTimer    = useRef(null)
 
   const getActive = () => currentSlot.current === 'A' ? audioA.current : audioB.current
   const getNext   = () => currentSlot.current === 'A' ? audioB.current : audioA.current
@@ -50,7 +52,7 @@ export default function AmbientAudio({ currentYear, selectedEvent }) {
       .then(() => {
         setIsLoading(false)
         setActiveTrack({ label, filename })
-        activeFile.current = filename
+        activeFile.current  = filename
         currentSlot.current = currentSlot.current === 'A' ? 'B' : 'A'
         clearInterval(fadeTimer.current)
         let step = 0
@@ -72,42 +74,38 @@ export default function AmbientAudio({ currentYear, selectedEvent }) {
       })
   }
 
+  // ── Trigger: fetch dynasty when activeEntityId or currentYear changes ──
   useEffect(() => {
-    if (!selectedEvent?.entity_id) return
+    if (!activeEntityId || !currentYear) return
 
     async function fetchAndPlay() {
-      console.log('entity_id:', selectedEvent.entity_id)
-      console.log('currentYear:', currentYear)
-
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('rulers')
         .select('dynasty, name')
-        .eq('entity_id', selectedEvent.entity_id)
+        .eq('entity_id', activeEntityId)
         .lte('reign_start', currentYear)
         .gte('reign_end', currentYear)
         .limit(1)
         .single()
 
-      console.log('ruler data:', data)
-      console.log('error:', error)
-
       if (!data?.dynasty) return
 
+      // Only act if dynasty has actually changed
+      if (data.dynasty === activeDynasty.current) return
+      activeDynasty.current = data.dynasty
+
       const filename = dynastyToFilename(data.dynasty)
-      console.log('filename:', filename)
-      console.log('enabled:', enabled)
 
       if (!enabled) {
+        // First play — fade in on slot A
         setEnabled(true)
         const el = audioA.current
         currentSlot.current = 'A'
-        el.src = `/audio/${filename}`
+        el.src    = `/audio/${filename}`
         el.volume = 0
         setIsLoading(true)
-        console.log('attempting play:', el.src)
         el.play()
           .then(() => {
-            console.log('playing successfully')
             setIsLoading(false)
             setActiveTrack({ label: data.dynasty, filename })
             activeFile.current = filename
@@ -125,27 +123,26 @@ export default function AmbientAudio({ currentYear, selectedEvent }) {
             setEnabled(false)
           })
       } else {
+        // Already playing — crossfade to new dynasty track
         playFile(filename, data.dynasty, volume)
       }
     }
 
     fetchAndPlay()
-  }, [selectedEvent]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeEntityId, currentYear, replayTrigger]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ── Duck audio during narration ────────────────────────────────────────
   useEffect(() => {
     const handleNarration = (e) => {
       const el = getActive()
       if (!el) return
-      if (e.detail.active) {
-        el.volume = Math.min(el.volume, 0.08) // duck to 8%
-      } else {
-        el.volume = volume // restore
-      }
+      el.volume = e.detail.active ? Math.min(el.volume, 0.08) : volume
     }
     window.addEventListener('narration', handleNarration)
     return () => window.removeEventListener('narration', handleNarration)
   }, [volume]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ── Sync volume slider ─────────────────────────────────────────────────
   useEffect(() => {
     const el = getActive()
     if (el && el.volume > 0) el.volume = volume
@@ -155,7 +152,8 @@ export default function AmbientAudio({ currentYear, selectedEvent }) {
     if (enabled) {
       setEnabled(false)
       setActiveTrack(null)
-      activeFile.current = null
+      activeFile.current    = null
+      activeDynasty.current = null
       clearInterval(fadeTimer.current)
       ;[audioA.current, audioB.current].forEach(el => {
         if (!el || el.paused) return
@@ -166,6 +164,9 @@ export default function AmbientAudio({ currentYear, selectedEvent }) {
           if (v <= 0) { clearInterval(fade); el.pause(); el.src = '' }
         }, 50)
       })
+    } else {
+      activeDynasty.current = null
+      setReplayTrigger(t => t + 1)
     }
   }
 
@@ -188,7 +189,7 @@ export default function AmbientAudio({ currentYear, selectedEvent }) {
               </>
             ) : (
               <div style={{ fontSize: 11, color: mid, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
-                {isLoading ? 'Loading…' : '— click an event on the map —'}
+                {isLoading ? 'Loading…' : '— scrub the timeline to begin —'}
               </div>
             )}
           </div>
@@ -203,17 +204,20 @@ export default function AmbientAudio({ currentYear, selectedEvent }) {
       )}
 
       <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-        <button onClick={() => setExpanded(e => !e)} style={{ background: parchment, border: `2px solid ${gold}`, borderRadius: 8, padding: '5px 10px', cursor: 'pointer', color: dark, fontFamily: "'Cinzel', serif", fontSize: 13, boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
+        <button onClick={() => setExpanded(e => !e)}
+          style={{ background: parchment, border: `2px solid ${gold}`, borderRadius: 8, padding: '5px 10px', cursor: 'pointer', color: dark, fontFamily: "'Cinzel', serif", fontSize: 13, boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
           🎵 {expanded ? '▲' : '▼'}
         </button>
         {enabled ? (
-          <button onClick={handleToggle} style={{ background: dark, border: `2px solid ${gold}`, borderRadius: 8, padding: '5px 14px', cursor: 'pointer', color: light, fontFamily: "'Cinzel', serif", fontSize: 11, boxShadow: '0 2px 8px rgba(0,0,0,0.15)', minWidth: 96 }}>
+          <button onClick={handleToggle}
+            style={{ background: dark, border: `2px solid ${gold}`, borderRadius: 8, padding: '5px 14px', cursor: 'pointer', color: light, fontFamily: "'Cinzel', serif", fontSize: 11, boxShadow: '0 2px 8px rgba(0,0,0,0.15)', minWidth: 96 }}>
             ⏸ Silence
           </button>
         ) : (
-          <div style={{ background: parchment, border: `2px solid ${gold}`, borderRadius: 8, padding: '5px 14px', color: mid, fontFamily: "'Cinzel', serif", fontSize: 11, boxShadow: '0 2px 8px rgba(0,0,0,0.15)', minWidth: 96, textAlign: 'center' }}>
-            {isLoading ? '⏳ Loading…' : '🎵 Click a map event'}
-          </div>
+          <button onClick={handleToggle} style={{ background: parchment, border: `2px solid ${gold}`, borderRadius: 8, padding: '5px 14px', color: mid, fontFamily: "'Cinzel', serif", fontSize: 11, boxShadow: '0 2px 8px rgba(0,0,0,0.15)', minWidth: 96, textAlign: 'center', cursor: 'pointer' }}>
+            {isLoading ? '⏳ Loading…' : '▶ Play'}
+          </button>
+
         )}
       </div>
     </div>

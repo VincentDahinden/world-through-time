@@ -71,7 +71,7 @@ function App() {
         onEntityChange={setSelectedEntities}
       />
 
-      {/* Dynasty bar — rendered independently so position:fixed works reliably */}
+      {/* Dynasty bar */}
       <DynasticBar activeEntityId={activeEntityId} currentYear={currentYear} />
 
       {/* Event popup */}
@@ -86,7 +86,8 @@ function App() {
         selectedEvent={selectedEvent}
       />
 
-      <AmbientAudio currentYear={currentYear} selectedEvent={selectedEvent} />
+      {/* Ambient audio — triggers on dynasty change */}
+      <AmbientAudio currentYear={currentYear} activeEntityId={activeEntityId} />
 
       <Timeline
         currentYear={currentYear}
